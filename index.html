@@ -3,179 +3,144 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>أذكاري</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<title>أذكاري | Islamic App</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-body{
+*{
 margin:0;
+padding:0;
+box-sizing:border-box;
 font-family:'Cairo',sans-serif;
-background:linear-gradient(160deg,#0b1220,#111c33);
+}
+
+body{
+background:linear-gradient(135deg,#0a1f44,#c9a227);
+min-height:100vh;
 color:white;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:20px;
 }
-.container{max-width:520px;margin:auto;padding:20px}
+
 .card{
-background:linear-gradient(145deg,#14213d,#1f2f52);
-padding:25px;
-border-radius:25px;
-margin-bottom:25px;
-box-shadow:0 20px 60px rgba(0,0,0,.6);
-border:1px solid rgba(255,215,0,.3);
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(15px);
+padding:20px;
+border-radius:20px;
+width:100%;
+max-width:400px;
+margin-bottom:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.4);
 }
+
 h2{
-margin:0 0 20px 0;
-font-weight:900;
-background:linear-gradient(45deg,#FFD700,#ffcc00,#fff4b0);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-}
-button,select,input{
-background:linear-gradient(45deg,#FFD700,#D4AF37);
-color:#111;
-border:none;
-padding:12px 18px;
-border-radius:14px;
+margin-bottom:15px;
 font-weight:800;
-cursor:pointer;
+text-align:center;
 }
-select,input{width:100%}
-audio{width:100%;margin-top:10px}
-.tasbeeh-btn{width:100%;padding:24px;font-size:24px;margin-top:10px;border-radius:20px}
-#tasbeehCount{font-size:64px;text-align:center;margin:15px 0}
-.prayer-box{padding:10px 0;border-bottom:1px solid rgba(255,215,0,.2)}
-.next{background:rgba(255,215,0,.15);border-radius:12px;padding:10px}
-.countdown{color:#FFD700;font-weight:700}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:12px;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+background:linear-gradient(45deg,#c9a227,#f4d03f);
+color:#0a1f44;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+.prayer-time{
+display:flex;
+justify-content:space-between;
+margin:8px 0;
+font-weight:600;
+}
+
+audio{
+width:100%;
+margin-top:15px;
+}
 </style>
 </head>
+
 <body>
 
-<div class="container">
-
 <div class="card">
-<h2>📿 المسبحة</h2>
-<div id="tasbeehCount">0</div>
-<button class="tasbeeh-btn" onclick="tasbeeh()">تسبيح</button>
-<button onclick="resetTasbeeh()">تصفير</button>
+<h2>🕌 مواقيت الصلاة</h2>
+<div id="prayers">جاري تحديد موقعك...</div>
 </div>
 
 <div class="card">
-<h2>🔊 بث القرآن</h2>
-<select onchange="changeStream(this.value)">
-<option value="https://radio.mp3quran.net/abdulbasit_64kbps">عبدالباسط</option>
-<option value="https://radio.mp3quran.net/minshawi_64kbps">المنشاوي</option>
-<option value="https://radio.mp3quran.net/husary_64kbps">الحصري</option>
-<option value="https://radio.mp3quran.net/afasy_64kbps">العفاسي</option>
-</select>
-<audio id="radio" controls preload="none"></audio>
-</div>
-
-<div class="card">
-<h2>📍 أوقات الصلاة</h2>
-<div id="cityName">جاري تحديد الموقع...</div>
-<div id="prayerTimes"></div>
-</div>
-
+<h2>📖 القرآن الكريم</h2>
+<select id="surahSelect" style="width:100%;padding:10px;border-radius:10px;border:none;"></select>
+<button onclick="playSurah()">تشغيل السورة</button>
+<audio id="audioPlayer" controls></audio>
 </div>
 
 <script>
 
-/* مسبحة */
-let count=localStorage.getItem("tasbeeh")||0;
-tasbeehCount.innerText=count;
-function tasbeeh(){
-count++;
-localStorage.setItem("tasbeeh",count);
-tasbeehCount.innerText=count;
-}
-function resetTasbeeh(){
-count=0;
-localStorage.setItem("tasbeeh",0);
-tasbeehCount.innerText=0;
-}
+// ====== مواقيت الصلاة ======
 
-/* بث */
-function changeStream(url){
-const r=document.getElementById("radio");
-r.src=url;
-r.load();
-}
-
-/* Reverse Geocoding */
-function getCityName(lat,lon){
-fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
-.then(res=>res.json())
-.then(data=>{
-let city = data.address.city || data.address.town || data.address.state || "موقعك";
-document.getElementById("cityName").innerText="📍 "+city;
-});
-}
-
-/* مواقيت */
-function getPrayerTimes(lat,lon){
+function getPrayerTimes(lat, lon){
 fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`)
 .then(res=>res.json())
 .then(data=>{
-let t=data.data.timings;
-let prayers={
-"الفجر":t.Fajr,
-"الظهر":t.Dhuhr,
-"العصر":t.Asr,
-"المغرب":t.Maghrib,
-"العشاء":t.Isha
-};
-displayPrayers(prayers);
-startCountdown(prayers);
+let t = data.data.timings;
+document.getElementById("prayers").innerHTML=`
+<div class="prayer-time"><span>الفجر</span><span>${t.Fajr}</span></div>
+<div class="prayer-time"><span>الظهر</span><span>${t.Dhuhr}</span></div>
+<div class="prayer-time"><span>العصر</span><span>${t.Asr}</span></div>
+<div class="prayer-time"><span>المغرب</span><span>${t.Maghrib}</span></div>
+<div class="prayer-time"><span>العشاء</span><span>${t.Isha}</span></div>
+`;
 });
 }
 
-function displayPrayers(prayers){
-let html="";
-for(let name in prayers){
-html+=`
-<div class="prayer-box" id="box-${name}">
-<strong>${name}</strong> - ${prayers[name]}
-<span id="count-${name}" class="countdown"></span>
-</div>`;
-}
-prayerTimes.innerHTML=html;
-}
-
-function startCountdown(prayers){
-function update(){
-let now=new Date();
-let next=null,min=Infinity;
-
-for(let name in prayers){
-let [h,m]=prayers[name].split(":");
-let p=new Date();
-p.setHours(h,m,0);
-let diff=p-now;
-if(diff<0) diff+=86400000;
-if(diff<min){min=diff;next=name;}
-
-let hh=Math.floor(diff/3600000);
-let mm=Math.floor((diff%3600000)/60000);
-let ss=Math.floor((diff%60000)/1000);
-
-document.getElementById(`count-${name}`).innerText=
-` - ⏳ ${hh}س ${mm}د ${ss}ث`;
-}
-
-document.querySelectorAll(".prayer-box").forEach(e=>e.classList.remove("next"));
-if(next) document.getElementById(`box-${next}`).classList.add("next");
-}
-update();
-setInterval(update,1000);
-}
-
-/* تشغيل الموقع */
 if(navigator.geolocation){
-navigator.geolocation.getCurrentPosition(pos=>{
-let lat=pos.coords.latitude;
-let lon=pos.coords.longitude;
-getCityName(lat,lon);
-getPrayerTimes(lat,lon);
+navigator.geolocation.getCurrentPosition(
+pos=>{
+getPrayerTimes(pos.coords.latitude,pos.coords.longitude);
+},
+()=>{
+document.getElementById("prayers").innerHTML="فشل تحديد الموقع";
+}
+);
+}else{
+document.getElementById("prayers").innerHTML="المتصفح لا يدعم تحديد الموقع";
+}
+
+
+// ====== تحميل السور ======
+
+fetch("https://api.alquran.cloud/v1/surah")
+.then(res=>res.json())
+.then(data=>{
+let select = document.getElementById("surahSelect");
+data.data.forEach(surah=>{
+let option=document.createElement("option");
+option.value=surah.number;
+option.textContent=surah.name;
+select.appendChild(option);
 });
+});
+
+function playSurah(){
+let surahNumber=document.getElementById("surahSelect").value;
+let audio=document.getElementById("audioPlayer");
+
+audio.src=`https://everyayah.com/data/Alafasy_128kbps/${String(surahNumber).padStart(3,'0')}001.mp3`;
+audio.play();
 }
 
 </script>
