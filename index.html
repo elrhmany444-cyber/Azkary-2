@@ -75,7 +75,7 @@ cursor:pointer;
 
 audio{width:100%;margin-top:10px}
 
-/* Tasbeeh */
+/* Premium Tasbeeh */
 
 .tasbeeh-wrapper{
 position:fixed;
@@ -90,29 +90,51 @@ align-items:center;
 .tasbeeh-count{
 background:#c9a227;
 color:#0a1f44;
-padding:5px 14px;
+padding:6px 16px;
 border-radius:20px;
-margin-bottom:10px;
+margin-bottom:12px;
 font-weight:800;
+box-shadow:0 5px 15px rgba(0,0,0,.4);
 }
 
 .tasbeeh-btn{
-width:95px;
-height:95px;
+width:110px;
+height:110px;
 border-radius:50%;
-border:10px dotted #f4d03f;
-background:#c9a227;
+background:radial-gradient(circle at center,#f4d03f 30%,#c9a227 70%);
+position:relative;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:30px;
+font-size:34px;
 cursor:pointer;
-box-shadow:0 10px 25px rgba(0,0,0,.5);
+box-shadow:0 15px 30px rgba(0,0,0,.6);
 transition:.2s;
 }
 
+.tasbeeh-btn::before{
+content:"";
+position:absolute;
+width:130px;
+height:130px;
+border-radius:50%;
+border:12px dotted #f4d03f;
+animation:rotate 15s linear infinite;
+}
+
+@keyframes rotate{
+from{transform:rotate(0)}
+to{transform:rotate(360deg)}
+}
+
 .tasbeeh-btn:active{
-transform:scale(.9);
+transform:scale(.92);
+}
+
+.tasbeeh-btn.active33{
+box-shadow:0 0 25px #00ff99;
+background:radial-gradient(circle at center,#00ff99 30%,#0a1f44 70%);
+color:white;
 }
 </style>
 </head>
@@ -132,9 +154,7 @@ transform:scale(.9);
 <select id="reciterSelect">
 <option value="ar.alafasy">مشاري العفاسي</option>
 <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
-<option value="ar.mahermuaiqly">ماهر المعيقلي</option>
-<option value="ar.saoodshuraym">سعود الشريم</option>
-<option value="ar.yasserdosari">ياسر الدوسري</option>
+<option value="ar.faresabbad">فارس عباد</option>
 </select>
 
 <select id="surahSelect"></select>
@@ -142,50 +162,45 @@ transform:scale(.9);
 <button onclick="playSurah()">تشغيل السورة</button>
 
 <audio id="audioPlayer" controls></audio>
-
 </div>
 
 <div class="tasbeeh-wrapper">
 <div class="tasbeeh-count" id="tasbeehCount">0</div>
-<div class="tasbeeh-btn" onclick="tasbeehClick()">📿</div>
+<div class="tasbeeh-btn" id="tasbeehBtn" onclick="tasbeehClick()">📿</div>
 </div>
 
 <script>
 
-/* تحديد موقع GPS */
+/* GPS */
 if(navigator.geolocation){
 navigator.geolocation.getCurrentPosition(
-position=>{
-let lat=position.coords.latitude;
-let lon=position.coords.longitude;
+pos=>{
+let lat=pos.coords.latitude;
+let lon=pos.coords.longitude;
 reverseGeocode(lat,lon);
 getPrayerTimes(lat,lon);
 },
-error=>{
-document.getElementById("locationText").innerText="فشل تحديد الموقع";
-},
+()=>{document.getElementById("locationText").innerText="فشل تحديد الموقع"},
 {enableHighAccuracy:true}
 );
 }
 
-/* اسم المدينة */
 function reverseGeocode(lat,lon){
 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
-.then(res=>res.json())
-.then(data=>{
-let city=data.address.city || data.address.town || data.address.village;
+.then(r=>r.json())
+.then(d=>{
+let city=d.address.city||d.address.town||d.address.village;
 document.getElementById("locationText").innerText=`موقعك: ${city}`;
 });
 }
 
-/* مواقيت الصلاة */
 let countdownInterval;
 
 function getPrayerTimes(lat,lon){
 fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`)
-.then(res=>res.json())
-.then(data=>{
-let t=data.data.timings;
+.then(r=>r.json())
+.then(d=>{
+let t=d.data.timings;
 
 document.getElementById("prayers").innerHTML=`
 <div class="prayer-time"><span>الفجر</span><span>${t.Fajr}</span></div>
@@ -204,80 +219,74 @@ if(countdownInterval) clearInterval(countdownInterval);
 
 let prayers=["Fajr","Dhuhr","Asr","Maghrib","Isha"];
 let now=new Date();
-let nextTime=null;
+let next=null;
 
 for(let p of prayers){
 let [h,m]=times[p].split(":");
-let prayerTime=new Date();
-prayerTime.setHours(h,m,0);
-if(prayerTime>now){nextTime=prayerTime;break;}
+let pt=new Date();
+pt.setHours(h,m,0);
+if(pt>now){next=pt;break;}
 }
 
-if(!nextTime){
+if(!next){
 let [h,m]=times["Fajr"].split(":");
-nextTime=new Date();
-nextTime.setDate(nextTime.getDate()+1);
-nextTime.setHours(h,m,0);
+next=new Date();
+next.setDate(next.getDate()+1);
+next.setHours(h,m,0);
 }
 
 countdownInterval=setInterval(()=>{
-let diff=nextTime-new Date();
+let diff=next-new Date();
 if(diff<=0){
 clearInterval(countdownInterval);
 document.getElementById("countdownBar").innerText="حان وقت الصلاة 🕌";
 return;
 }
+let h=Math.floor(diff/3600000);
+let m=Math.floor((diff%3600000)/60000);
+let s=Math.floor((diff%60000)/1000);
 
-let h=Math.floor(diff/(1000*60*60));
-let m=Math.floor((diff%(1000*60*60))/(1000*60));
-let s=Math.floor((diff%(1000*60))/1000);
-
-document.getElementById("countdownBar").innerText=
-`متبقي ${h}س ${m}د ${s}ث`;
+document.getElementById("countdownBar").innerText=`متبقي ${h}س ${m}د ${s}ث`;
 },1000);
 }
 
-/* تحميل السور */
+/* Quran */
 fetch("https://api.alquran.cloud/v1/surah")
-.then(res=>res.json())
-.then(data=>{
-let select=document.getElementById("surahSelect");
-data.data.forEach(s=>{
-let option=document.createElement("option");
-option.value=s.number;
-option.textContent=s.name;
-select.appendChild(option);
+.then(r=>r.json())
+.then(d=>{
+let s=document.getElementById("surahSelect");
+d.data.forEach(x=>{
+let o=document.createElement("option");
+o.value=x.number;
+o.textContent=x.name;
+s.appendChild(o);
 });
 });
 
-/* حفظ الشيخ */
-let savedReciter=localStorage.getItem("reciter");
-if(savedReciter){
-document.getElementById("reciterSelect").value=savedReciter;
-}
-
-document.getElementById("reciterSelect").addEventListener("change",function(){
-localStorage.setItem("reciter",this.value);
-});
-
-/* تشغيل السورة */
 function playSurah(){
 let surah=document.getElementById("surahSelect").value;
 let reciter=document.getElementById("reciterSelect").value;
 let audio=document.getElementById("audioPlayer");
-
 audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${reciter}/${surah}.mp3`;
 audio.play();
 }
 
-/* السبحة */
+/* Tasbeeh */
 let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
+let tasbeehBtn=document.getElementById("tasbeehBtn");
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
 
 function tasbeehClick(){
 tasbeehCounter++;
 localStorage.setItem("tasbeeh",tasbeehCounter);
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
+
+if(tasbeehCounter%33===0){
+tasbeehBtn.classList.add("active33");
+}else{
+tasbeehBtn.classList.remove("active33");
+}
+
 if(navigator.vibrate) navigator.vibrate(40);
 }
 
