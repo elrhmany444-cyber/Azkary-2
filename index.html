@@ -8,12 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Cairo',sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
 
 body{
 background:linear-gradient(135deg,#0a1f44,#c9a227);
@@ -23,17 +18,19 @@ display:flex;
 flex-direction:column;
 align-items:center;
 padding:20px;
+opacity:0;
+transition:.4s;
 }
 
 .card{
-background:rgba(255,255,255,0.1);
+background:rgba(255,255,255,.12);
 backdrop-filter:blur(15px);
 padding:20px;
 border-radius:20px;
 width:100%;
-max-width:400px;
+max-width:420px;
 margin-bottom:20px;
-box-shadow:0 10px 25px rgba(0,0,0,0.4);
+box-shadow:0 15px 30px rgba(0,0,0,.4);
 }
 
 h2{
@@ -42,22 +39,15 @@ font-weight:800;
 text-align:center;
 }
 
-button{
-width:100%;
-padding:12px;
-margin-top:10px;
-border:none;
-border-radius:12px;
-font-size:16px;
-font-weight:600;
-cursor:pointer;
-background:linear-gradient(45deg,#c9a227,#f4d03f);
-color:#0a1f44;
-transition:0.3s;
-}
-
-button:hover{
-transform:scale(1.05);
+.countdown-bar{
+background:rgba(0,0,0,.3);
+padding:10px;
+border-radius:15px;
+text-align:center;
+font-weight:700;
+margin-bottom:15px;
+color:#f4d03f;
+font-size:15px;
 }
 
 .prayer-time{
@@ -65,12 +55,66 @@ display:flex;
 justify-content:space-between;
 margin:8px 0;
 font-weight:600;
+font-size:15px;
 }
 
-audio{
+select,button{
 width:100%;
-margin-top:15px;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:12px;
+font-size:15px;
+font-weight:600;
 }
+
+button{
+cursor:pointer;
+background:linear-gradient(45deg,#c9a227,#f4d03f);
+color:#0a1f44;
+transition:.2s;
+}
+
+button:hover{transform:scale(1.05)}
+
+audio{width:100%;margin-top:15px}
+
+/* Tasbeeh */
+.tasbeeh-container{
+position:fixed;
+bottom:30px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+flex-direction:column;
+align-items:center;
+z-index:1000;
+}
+
+.tasbeeh-count{
+background:#c9a227;
+color:#0a1f44;
+font-weight:800;
+padding:6px 14px;
+border-radius:20px;
+margin-bottom:8px;
+box-shadow:0 5px 15px rgba(0,0,0,.4);
+}
+
+.tasbeeh-btn{
+width:80px;
+height:80px;
+border-radius:50%;
+border:none;
+font-size:32px;
+background:linear-gradient(145deg,#c9a227,#f4d03f);
+color:#0a1f44;
+cursor:pointer;
+box-shadow:0 10px 25px rgba(0,0,0,.5);
+transition:.2s;
+}
+
+.tasbeeh-btn:active{transform:scale(.9)}
 </style>
 </head>
 
@@ -78,25 +122,44 @@ margin-top:15px;
 
 <div class="card">
 <h2>🕌 مواقيت الصلاة</h2>
-<div id="prayers">جاري تحديد موقعك...</div>
+
+<div class="countdown-bar" id="countdownBar">
+جاري تحديد الموقع...
+</div>
+
+<div id="prayers"></div>
+
 </div>
 
 <div class="card">
 <h2>📖 القرآن الكريم</h2>
-<select id="surahSelect" style="width:100%;padding:10px;border-radius:10px;border:none;"></select>
+<select id="surahSelect"></select>
 <button onclick="playSurah()">تشغيل السورة</button>
 <audio id="audioPlayer" controls></audio>
 </div>
 
+<!-- Tasbeeh -->
+<div class="tasbeeh-container">
+  <div class="tasbeeh-count" id="tasbeehCount">0</div>
+  <button class="tasbeeh-btn" onclick="tasbeehClick()">📿</button>
+</div>
+
 <script>
 
-// ====== مواقيت الصلاة ======
+/* Smooth Load */
+window.addEventListener("load",()=>{document.body.style.opacity="1"});
+
+/* Prayer Times */
+
+let countdownInterval;
 
 function getPrayerTimes(lat, lon){
+
 fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`)
 .then(res=>res.json())
 .then(data=>{
-let t = data.data.timings;
+let t=data.data.timings;
+
 document.getElementById("prayers").innerHTML=`
 <div class="prayer-time"><span>الفجر</span><span>${t.Fajr}</span></div>
 <div class="prayer-time"><span>الظهر</span><span>${t.Dhuhr}</span></div>
@@ -104,43 +167,105 @@ document.getElementById("prayers").innerHTML=`
 <div class="prayer-time"><span>المغرب</span><span>${t.Maghrib}</span></div>
 <div class="prayer-time"><span>العشاء</span><span>${t.Isha}</span></div>
 `;
+
+calculateNextPrayer(t);
 });
 }
 
-if(navigator.geolocation){
-navigator.geolocation.getCurrentPosition(
-pos=>{
-getPrayerTimes(pos.coords.latitude,pos.coords.longitude);
-},
-()=>{
-document.getElementById("prayers").innerHTML="فشل تحديد الموقع";
+/* IP Fast */
+fetch("https://ipapi.co/json/")
+.then(res=>res.json())
+.then(data=>{
+getPrayerTimes(data.latitude,data.longitude);
+})
+.catch(()=>{
+document.getElementById("countdownBar").innerText="فشل تحديد الموقع";
+});
+
+/* Countdown */
+
+function calculateNextPrayer(times){
+
+if(countdownInterval){clearInterval(countdownInterval);}
+
+let prayers=["Fajr","Dhuhr","Asr","Maghrib","Isha"];
+let now=new Date();
+let nextTime=null;
+let nextName="";
+
+for(let p of prayers){
+let [h,m]=times[p].split(":");
+let prayerTime=new Date();
+prayerTime.setHours(h,m,0);
+
+if(prayerTime>now){
+nextTime=prayerTime;
+nextName=p;
+break;
 }
-);
-}else{
-document.getElementById("prayers").innerHTML="المتصفح لا يدعم تحديد الموقع";
 }
 
+if(!nextTime){
+let [h,m]=times["Fajr"].split(":");
+nextTime=new Date();
+nextTime.setDate(nextTime.getDate()+1);
+nextTime.setHours(h,m,0);
+nextName="Fajr";
+}
 
-// ====== تحميل السور ======
+countdownInterval=setInterval(()=>{
+
+let now=new Date();
+let diff=nextTime-now;
+
+if(diff<=0){
+clearInterval(countdownInterval);
+document.getElementById("countdownBar").innerText="حان وقت الصلاة 🕌";
+return;
+}
+
+let h=Math.floor(diff/(1000*60*60));
+let m=Math.floor((diff%(1000*60*60))/(1000*60));
+let s=Math.floor((diff%(1000*60))/1000);
+
+document.getElementById("countdownBar").innerText=
+`متبقي على الصلاة القادمة ${h}س ${m}د ${s}ث`;
+
+},1000);
+}
+
+/* Quran */
 
 fetch("https://api.alquran.cloud/v1/surah")
 .then(res=>res.json())
 .then(data=>{
-let select = document.getElementById("surahSelect");
-data.data.forEach(surah=>{
+let select=document.getElementById("surahSelect");
+data.data.forEach(s=>{
 let option=document.createElement("option");
-option.value=surah.number;
-option.textContent=surah.name;
+option.value=s.number;
+option.textContent=s.name;
 select.appendChild(option);
 });
 });
 
 function playSurah(){
-let surahNumber=document.getElementById("surahSelect").value;
+let surah=document.getElementById("surahSelect").value;
 let audio=document.getElementById("audioPlayer");
-
-audio.src=`https://everyayah.com/data/Alafasy_128kbps/${String(surahNumber).padStart(3,'0')}001.mp3`;
+audio.src=`https://everyayah.com/data/Alafasy_128kbps/${String(surah).padStart(3,'0')}001.mp3`;
 audio.play();
+}
+
+/* Tasbeeh */
+
+let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
+document.getElementById("tasbeehCount").innerText=tasbeehCounter;
+
+function tasbeehClick(){
+tasbeehCounter++;
+localStorage.setItem("tasbeeh",tasbeehCounter);
+document.getElementById("tasbeehCount").innerText=tasbeehCounter;
+
+if(navigator.vibrate){navigator.vibrate(40);}
 }
 
 </script>
