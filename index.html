@@ -18,8 +18,6 @@ display:flex;
 flex-direction:column;
 align-items:center;
 padding:20px;
-opacity:0;
-transition:.4s;
 }
 
 .card{
@@ -33,11 +31,7 @@ margin-bottom:20px;
 box-shadow:0 15px 30px rgba(0,0,0,.4);
 }
 
-h2{
-margin-bottom:10px;
-text-align:center;
-font-weight:800;
-}
+h2{text-align:center;margin-bottom:10px;font-weight:800}
 
 .location{
 text-align:center;
@@ -63,36 +57,20 @@ margin:8px 0;
 font-weight:600;
 }
 
-.quran-toggle{
-background:linear-gradient(45deg,#c9a227,#f4d03f);
-color:#0a1f44;
-padding:12px;
-border-radius:12px;
-text-align:center;
-cursor:pointer;
-font-weight:700;
-transition:.3s;
-}
-
-.quran-content{
-max-height:0;
-overflow:hidden;
-transition:.4s ease;
-}
-
-.quran-content.active{
-max-height:400px;
-margin-top:15px;
-}
-
 select,button{
 width:100%;
-padding:10px;
+padding:12px;
 margin-top:10px;
 border:none;
 border-radius:12px;
 font-size:15px;
 font-weight:600;
+}
+
+button{
+background:linear-gradient(45deg,#c9a227,#f4d03f);
+color:#0a1f44;
+cursor:pointer;
 }
 
 audio{width:100%;margin-top:10px}
@@ -119,16 +97,15 @@ font-weight:800;
 }
 
 .tasbeeh-btn{
-width:90px;
-height:90px;
+width:95px;
+height:95px;
 border-radius:50%;
-border:8px dotted #f4d03f;
+border:10px dotted #f4d03f;
 background:#c9a227;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:28px;
-color:#0a1f44;
+font-size:30px;
 cursor:pointer;
 box-shadow:0 10px 25px rgba(0,0,0,.5);
 transition:.2s;
@@ -137,7 +114,6 @@ transition:.2s;
 .tasbeeh-btn:active{
 transform:scale(.9);
 }
-
 </style>
 </head>
 
@@ -151,18 +127,24 @@ transform:scale(.9);
 </div>
 
 <div class="card">
-<div class="quran-toggle" onclick="toggleQuran()" id="quranBtn">
-📖 فتح القرآن
-</div>
+<h2>📖 القرآن الكريم</h2>
 
-<div class="quran-content" id="quranContent">
+<select id="reciterSelect">
+<option value="ar.alafasy">مشاري العفاسي</option>
+<option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
+<option value="ar.mahermuaiqly">ماهر المعيقلي</option>
+<option value="ar.saoodshuraym">سعود الشريم</option>
+<option value="ar.yasserdosari">ياسر الدوسري</option>
+</select>
+
 <select id="surahSelect"></select>
+
 <button onclick="playSurah()">تشغيل السورة</button>
+
 <audio id="audioPlayer" controls></audio>
-</div>
+
 </div>
 
-<!-- Tasbeeh -->
 <div class="tasbeeh-wrapper">
 <div class="tasbeeh-count" id="tasbeehCount">0</div>
 <div class="tasbeeh-btn" onclick="tasbeehClick()">📿</div>
@@ -170,31 +152,36 @@ transform:scale(.9);
 
 <script>
 
-window.addEventListener("load",()=>{document.body.style.opacity="1"})
+/* تحديد موقع GPS */
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(
+position=>{
+let lat=position.coords.latitude;
+let lon=position.coords.longitude;
+reverseGeocode(lat,lon);
+getPrayerTimes(lat,lon);
+},
+error=>{
+document.getElementById("locationText").innerText="فشل تحديد الموقع";
+},
+{enableHighAccuracy:true}
+);
+}
 
-let countdownInterval;
-
-/* تحديد الموقع + اسم المدينة */
-
-fetch("https://ipapi.co/json/")
+/* اسم المدينة */
+function reverseGeocode(lat,lon){
+fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
 .then(res=>res.json())
 .then(data=>{
-let city=data.city;
-let region=data.region;
-
-document.getElementById("locationText").innerText=
-`موقعك: ${city} - الحساب حسب أقرب مدينة كبرى`;
-
-getPrayerTimes(data.latitude,data.longitude);
-})
-.catch(()=>{
-document.getElementById("locationText").innerText="فشل تحديد الموقع";
+let city=data.address.city || data.address.town || data.address.village;
+document.getElementById("locationText").innerText=`موقعك: ${city}`;
 });
+}
 
 /* مواقيت الصلاة */
+let countdownInterval;
 
 function getPrayerTimes(lat,lon){
-
 fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`)
 .then(res=>res.json())
 .then(data=>{
@@ -212,10 +199,7 @@ calculateNextPrayer(t);
 });
 }
 
-/* عداد الصلاة */
-
 function calculateNextPrayer(times){
-
 if(countdownInterval) clearInterval(countdownInterval);
 
 let prayers=["Fajr","Dhuhr","Asr","Maghrib","Isha"];
@@ -226,11 +210,7 @@ for(let p of prayers){
 let [h,m]=times[p].split(":");
 let prayerTime=new Date();
 prayerTime.setHours(h,m,0);
-
-if(prayerTime>now){
-nextTime=prayerTime;
-break;
-}
+if(prayerTime>now){nextTime=prayerTime;break;}
 }
 
 if(!nextTime){
@@ -242,7 +222,6 @@ nextTime.setHours(h,m,0);
 
 countdownInterval=setInterval(()=>{
 let diff=nextTime-new Date();
-
 if(diff<=0){
 clearInterval(countdownInterval);
 document.getElementById("countdownBar").innerText="حان وقت الصلاة 🕌";
@@ -258,8 +237,7 @@ document.getElementById("countdownBar").innerText=
 },1000);
 }
 
-/* القرآن */
-
+/* تحميل السور */
 fetch("https://api.alquran.cloud/v1/surah")
 .then(res=>res.json())
 .then(data=>{
@@ -272,28 +250,27 @@ select.appendChild(option);
 });
 });
 
-function toggleQuran(){
-let content=document.getElementById("quranContent");
-let btn=document.getElementById("quranBtn");
-
-content.classList.toggle("active");
-
-if(content.classList.contains("active")){
-btn.innerText="❌ إغلاق القرآن";
-}else{
-btn.innerText="📖 فتح القرآن";
-}
+/* حفظ الشيخ */
+let savedReciter=localStorage.getItem("reciter");
+if(savedReciter){
+document.getElementById("reciterSelect").value=savedReciter;
 }
 
+document.getElementById("reciterSelect").addEventListener("change",function(){
+localStorage.setItem("reciter",this.value);
+});
+
+/* تشغيل السورة */
 function playSurah(){
 let surah=document.getElementById("surahSelect").value;
+let reciter=document.getElementById("reciterSelect").value;
 let audio=document.getElementById("audioPlayer");
-audio.src=`https://everyayah.com/data/Alafasy_128kbps/${String(surah).padStart(3,'0')}001.mp3`;
+
+audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${reciter}/${surah}.mp3`;
 audio.play();
 }
 
 /* السبحة */
-
 let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
 
