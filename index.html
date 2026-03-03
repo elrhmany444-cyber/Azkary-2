@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تطبيق الأذكار</title>
+<title>أذكاري</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
 
 <style>
@@ -20,23 +20,44 @@ body{
   padding:20px;
 }
 .card{
-  background:#1B263B;
+  background:linear-gradient(145deg,#1B263B,#16213E);
   padding:20px;
-  border-radius:15px;
+  border-radius:18px;
   margin-bottom:20px;
+  box-shadow:0 8px 25px rgba(0,0,0,0.4);
 }
-h2{color:#C6A75E;margin-top:0}
-button{
-  background:#C6A75E;
+h2{
+  color:#D4AF37;
+  margin-top:0;
+}
+button, select{
+  background:#D4AF37;
+  color:#0D1B2A;
   border:none;
-  padding:10px 20px;
+  padding:10px 15px;
   border-radius:10px;
   font-weight:700;
   cursor:pointer;
-  margin:5px 0;
+}
+select{
+  width:100%;
+}
+.small-toggle{
+  position:fixed;
+  top:15px;
+  left:15px;
+  background:#D4AF37;
+  width:35px;
+  height:35px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  cursor:pointer;
 }
 .dark{
-  background:#f5f5f5;
+  background:#f2f2f2;
   color:#111;
 }
 .dark .card{
@@ -48,43 +69,45 @@ button{
   overflow:hidden;
 }
 .progress div{
-  background:#C6A75E;
+  background:#D4AF37;
   height:10px;
+}
+audio{
+  width:100%;
+  margin-top:10px;
 }
 </style>
 </head>
 <body>
 
+<div class="small-toggle" onclick="toggleDark()">🌙</div>
+
 <div class="container">
 
-<!-- 🌙 Dark Mode -->
-<div class="card">
-<h2>🌙 الوضع الليلي</h2>
-<button onclick="toggleDark()">تبديل الوضع</button>
-</div>
-
-<!-- 🔊 بث قرآن -->
-<div class="card">
-<h2>🔊 بث قرآن</h2>
-<select id="sheikh" onchange="changeStream()">
-<option value="https://stream.radiojar.com/8s5u5tpdtwzuv">إذاعة عامة</option>
-<option value="https://server10.mp3quran.net/basit">عبدالباسط</option>
-<option value="https://server7.mp3quran.net/minsh">المنشاوي</option>
-<option value="https://server6.mp3quran.net/husary">الحصري</option>
-</select>
-<br><br>
-<audio id="radio" controls style="width:100%"></audio>
-</div>
-
-<!-- 📿 مسبحة -->
+<!-- 📿 المسبحة -->
 <div class="card">
 <h2>📿 المسبحة</h2>
-<h1 id="tasbeehCount">0</h1>
+<h1 id="tasbeehCount" style="font-size:48px;">0</h1>
 <button onclick="tasbeeh()">تسبيح</button>
 <button onclick="resetTasbeeh()">تصفير</button>
 </div>
 
-<!-- 📖 ختمة -->
+<!-- 🔊 بث قرآن -->
+<div class="card">
+<h2>🔊 بث القرآن</h2>
+<select id="sheikh" onchange="changeStream()">
+<option value="https://server10.mp3quran.net/basit">عبدالباسط عبدالصمد</option>
+<option value="https://server7.mp3quran.net/minsh">المنشاوي</option>
+<option value="https://server6.mp3quran.net/husary">الحصري</option>
+<option value="https://server8.mp3quran.net/sds">السديس</option>
+<option value="https://server11.mp3quran.net/shur">الشريم</option>
+<option value="https://server12.mp3quran.net/ajm">أحمد العجمي</option>
+<option value="https://server13.mp3quran.net/afasy">العفاسي</option>
+</select>
+<audio id="radio" controls></audio>
+</div>
+
+<!-- 📖 الختمة -->
 <div class="card">
 <h2>📖 عداد الختمة</h2>
 <input type="number" id="pagesRead" placeholder="عدد الصفحات اليوم" style="width:100%;padding:8px;border-radius:8px;border:none;">
@@ -94,22 +117,17 @@ button{
 <div class="progress"><div id="progressBar" style="width:0%"></div></div>
 </div>
 
-<!-- 📊 إحصائيات -->
+<!-- 📍 أوقات الصلاة -->
 <div class="card">
-<h2>📊 إحصائيات اليوم</h2>
-<p>عدد التسبيحات: <span id="statsTasbeeh">0</span></p>
-<p>عدد الصفحات المقروءة: <span id="statsPages">0</span></p>
-</div>
-
-<!-- ⏰ أوقات الصلاة -->
-<div class="card">
-<h2>⏰ أوقات الصلاة</h2>
-<div id="prayerTimes">جاري التحميل...</div>
+<h2>📍 أوقات الصلاة</h2>
+<div id="locationInfo">جاري تحديد الموقع...</div>
+<div id="prayerTimes"></div>
 </div>
 
 </div>
 
 <script>
+
 /* Dark Mode */
 function toggleDark(){
   document.body.classList.toggle("dark");
@@ -119,13 +137,6 @@ if(localStorage.getItem("darkMode")==="true"){
   document.body.classList.add("dark");
 }
 
-/* Radio */
-const radio=document.getElementById("radio");
-function changeStream(){
-  radio.src=document.getElementById("sheikh").value;
-}
-changeStream();
-
 /* Tasbeeh */
 let count=localStorage.getItem("tasbeeh")||0;
 document.getElementById("tasbeehCount").innerText=count;
@@ -133,8 +144,7 @@ function tasbeeh(){
   count++;
   localStorage.setItem("tasbeeh",count);
   document.getElementById("tasbeehCount").innerText=count;
-  document.getElementById("statsTasbeeh").innerText=count;
-  if(navigator.vibrate) navigator.vibrate(50);
+  if(navigator.vibrate) navigator.vibrate(40);
 }
 function resetTasbeeh(){
   count=0;
@@ -142,11 +152,17 @@ function resetTasbeeh(){
   document.getElementById("tasbeehCount").innerText=0;
 }
 
+/* Radio */
+const radio=document.getElementById("radio");
+function changeStream(){
+  radio.src=document.getElementById("sheikh").value;
+}
+changeStream();
+
 /* Khatma */
 let totalPages=604;
 let pages=localStorage.getItem("pages")||0;
 updateUI();
-
 function updateKhatma(){
   let today=parseInt(document.getElementById("pagesRead").value)||0;
   pages=parseInt(pages)+today;
@@ -154,32 +170,48 @@ function updateKhatma(){
   localStorage.setItem("pages",pages);
   updateUI();
 }
-
 function updateUI(){
   let percent=((pages/totalPages)*100).toFixed(1);
   document.getElementById("khatmaPercent").innerText=percent;
   document.getElementById("progressBar").style.width=percent+"%";
-  document.getElementById("statsPages").innerText=pages;
 }
-updateUI();
 
-/* Prayer Times */
-fetch("https://api.aladhan.com/v1/timingsByCity?city=Cairo&country=Egypt")
+/* Prayer Times by Location */
+function getPrayerTimes(lat,lon){
+fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`)
 .then(res=>res.json())
 .then(data=>{
-  let t=data.data.timings;
-  document.getElementById("prayerTimes").innerHTML=`
-  الفجر: ${t.Fajr}<br>
-  الظهر: ${t.Dhuhr}<br>
-  العصر: ${t.Asr}<br>
-  المغرب: ${t.Maghrib}<br>
-  العشاء: ${t.Isha}
-  `;
+let t=data.data.timings;
+document.getElementById("prayerTimes").innerHTML=`
+الفجر: ${t.Fajr}<br>
+الظهر: ${t.Dhuhr}<br>
+العصر: ${t.Asr}<br>
+المغرب: ${t.Maghrib}<br>
+العشاء: ${t.Isha}
+`;
 });
+}
 
-/* Restore stats */
-document.getElementById("statsTasbeeh").innerText=count;
-document.getElementById("statsPages").innerText=pages;
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(position=>{
+let lat=position.coords.latitude;
+let lon=position.coords.longitude;
+localStorage.setItem("lat",lat);
+localStorage.setItem("lon",lon);
+document.getElementById("locationInfo").innerText="📍 تم تحديد موقعك";
+getPrayerTimes(lat,lon);
+},()=>{
+let lat=localStorage.getItem("lat");
+let lon=localStorage.getItem("lon");
+if(lat && lon){
+document.getElementById("locationInfo").innerText="📍 باستخدام آخر موقع محفوظ";
+getPrayerTimes(lat,lon);
+}else{
+document.getElementById("locationInfo").innerText="❌ لم يتم السماح بالموقع";
+}
+});
+}
+
 </script>
 
 </body>
