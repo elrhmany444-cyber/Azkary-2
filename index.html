@@ -12,13 +12,15 @@
 
 body{
 background:linear-gradient(135deg,#0a1f44,#c9a227);
-min-height:100vh;
+min-height:110vh;
 color:white;
 display:flex;
 flex-direction:column;
 align-items:center;
 padding:20px;
 }
+
+/* الكروت */
 
 .card{
 background:rgba(255,255,255,.12);
@@ -75,7 +77,7 @@ cursor:pointer;
 
 audio{width:100%;margin-top:10px}
 
-/* Premium Tasbeeh */
+/* سبحة أول تصميم مع تكبير الإيموجي */
 
 .tasbeeh-wrapper{
 position:fixed;
@@ -90,7 +92,7 @@ align-items:center;
 .tasbeeh-count{
 background:#c9a227;
 color:#0a1f44;
-padding:6px 16px;
+padding:6px 18px;
 border-radius:20px;
 margin-bottom:12px;
 font-weight:800;
@@ -106,7 +108,8 @@ position:relative;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:34px;
+font-size:58px; /* الإيموجي مكبّر */
+line-height:1;
 cursor:pointer;
 box-shadow:0 15px 30px rgba(0,0,0,.6);
 transition:.2s;
@@ -131,10 +134,12 @@ to{transform:rotate(360deg)}
 transform:scale(.92);
 }
 
-.tasbeeh-btn.active33{
-box-shadow:0 0 25px #00ff99;
-background:radial-gradient(circle at center,#00ff99 30%,#0a1f44 70%);
-color:white;
+/* الفوتر */
+
+.footer{
+margin-top:60px;
+font-size:14px;
+opacity:.8;
 }
 </style>
 </head>
@@ -155,6 +160,7 @@ color:white;
 <option value="ar.alafasy">مشاري العفاسي</option>
 <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
 <option value="ar.faresabbad">فارس عباد</option>
+<option value="ar.abdurrahmaansudais">عبد الرحمن السديس</option>
 </select>
 
 <select id="surahSelect"></select>
@@ -167,6 +173,10 @@ color:white;
 <div class="tasbeeh-wrapper">
 <div class="tasbeeh-count" id="tasbeehCount">0</div>
 <div class="tasbeeh-btn" id="tasbeehBtn" onclick="tasbeehClick()">📿</div>
+</div>
+
+<div class="footer">
+تم التصميم بواسطة Rhmany
 </div>
 
 <script>
@@ -185,6 +195,7 @@ getPrayerTimes(lat,lon);
 );
 }
 
+/* اسم المدينة */
 function reverseGeocode(lat,lon){
 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
 .then(r=>r.json())
@@ -194,6 +205,7 @@ document.getElementById("locationText").innerText=`موقعك: ${city}`;
 });
 }
 
+/* مواقيت الصلاة */
 let countdownInterval;
 
 function getPrayerTimes(lat,lon){
@@ -250,7 +262,7 @@ document.getElementById("countdownBar").innerText=`متبقي ${h}س ${m}د ${s}
 },1000);
 }
 
-/* Quran */
+/* تحميل السور */
 fetch("https://api.alquran.cloud/v1/surah")
 .then(r=>r.json())
 .then(d=>{
@@ -263,6 +275,7 @@ s.appendChild(o);
 });
 });
 
+/* تشغيل السورة */
 function playSurah(){
 let surah=document.getElementById("surahSelect").value;
 let reciter=document.getElementById("reciterSelect").value;
@@ -271,22 +284,14 @@ audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${reciter}/${surah}
 audio.play();
 }
 
-/* Tasbeeh */
+/* السبحة بدون رقم محدد */
 let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
-let tasbeehBtn=document.getElementById("tasbeehBtn");
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
 
 function tasbeehClick(){
 tasbeehCounter++;
 localStorage.setItem("tasbeeh",tasbeehCounter);
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
-
-if(tasbeehCounter%33===0){
-tasbeehBtn.classList.add("active33");
-}else{
-tasbeehBtn.classList.remove("active33");
-}
-
 if(navigator.vibrate) navigator.vibrate(40);
 }
 
