@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تطبيق الأذكار</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Cairo',sans-serif;
+  background:#0D1B2A;
+  color:white;
+  transition:.3s;
+}
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:#1B263B;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+}
+h2{color:#C6A75E;margin-top:0}
+button{
+  background:#C6A75E;
+  border:none;
+  padding:10px 20px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+  margin:5px 0;
+}
+.dark{
+  background:#f5f5f5;
+  color:#111;
+}
+.dark .card{
+  background:#ffffff;
+}
+.progress{
+  background:#333;
+  border-radius:10px;
+  overflow:hidden;
+}
+.progress div{
+  background:#C6A75E;
+  height:10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- 🌙 Dark Mode -->
+<div class="card">
+<h2>🌙 الوضع الليلي</h2>
+<button onclick="toggleDark()">تبديل الوضع</button>
+</div>
+
+<!-- 🔊 بث قرآن -->
+<div class="card">
+<h2>🔊 بث قرآن</h2>
+<select id="sheikh" onchange="changeStream()">
+<option value="https://stream.radiojar.com/8s5u5tpdtwzuv">إذاعة عامة</option>
+<option value="https://server10.mp3quran.net/basit">عبدالباسط</option>
+<option value="https://server7.mp3quran.net/minsh">المنشاوي</option>
+<option value="https://server6.mp3quran.net/husary">الحصري</option>
+</select>
+<br><br>
+<audio id="radio" controls style="width:100%"></audio>
+</div>
+
+<!-- 📿 مسبحة -->
+<div class="card">
+<h2>📿 المسبحة</h2>
+<h1 id="tasbeehCount">0</h1>
+<button onclick="tasbeeh()">تسبيح</button>
+<button onclick="resetTasbeeh()">تصفير</button>
+</div>
+
+<!-- 📖 ختمة -->
+<div class="card">
+<h2>📖 عداد الختمة</h2>
+<input type="number" id="pagesRead" placeholder="عدد الصفحات اليوم" style="width:100%;padding:8px;border-radius:8px;border:none;">
+<br><br>
+<button onclick="updateKhatma()">تحديث</button>
+<p>التقدم: <span id="khatmaPercent">0</span>%</p>
+<div class="progress"><div id="progressBar" style="width:0%"></div></div>
+</div>
+
+<!-- 📊 إحصائيات -->
+<div class="card">
+<h2>📊 إحصائيات اليوم</h2>
+<p>عدد التسبيحات: <span id="statsTasbeeh">0</span></p>
+<p>عدد الصفحات المقروءة: <span id="statsPages">0</span></p>
+</div>
+
+<!-- ⏰ أوقات الصلاة -->
+<div class="card">
+<h2>⏰ أوقات الصلاة</h2>
+<div id="prayerTimes">جاري التحميل...</div>
+</div>
+
+</div>
+
+<script>
+/* Dark Mode */
+function toggleDark(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("darkMode",document.body.classList.contains("dark"));
+}
+if(localStorage.getItem("darkMode")==="true"){
+  document.body.classList.add("dark");
+}
+
+/* Radio */
+const radio=document.getElementById("radio");
+function changeStream(){
+  radio.src=document.getElementById("sheikh").value;
+}
+changeStream();
+
+/* Tasbeeh */
+let count=localStorage.getItem("tasbeeh")||0;
+document.getElementById("tasbeehCount").innerText=count;
+function tasbeeh(){
+  count++;
+  localStorage.setItem("tasbeeh",count);
+  document.getElementById("tasbeehCount").innerText=count;
+  document.getElementById("statsTasbeeh").innerText=count;
+  if(navigator.vibrate) navigator.vibrate(50);
+}
+function resetTasbeeh(){
+  count=0;
+  localStorage.setItem("tasbeeh",0);
+  document.getElementById("tasbeehCount").innerText=0;
+}
+
+/* Khatma */
+let totalPages=604;
+let pages=localStorage.getItem("pages")||0;
+updateUI();
+
+function updateKhatma(){
+  let today=parseInt(document.getElementById("pagesRead").value)||0;
+  pages=parseInt(pages)+today;
+  if(pages>604) pages=604;
+  localStorage.setItem("pages",pages);
+  updateUI();
+}
+
+function updateUI(){
+  let percent=((pages/totalPages)*100).toFixed(1);
+  document.getElementById("khatmaPercent").innerText=percent;
+  document.getElementById("progressBar").style.width=percent+"%";
+  document.getElementById("statsPages").innerText=pages;
+}
+updateUI();
+
+/* Prayer Times */
+fetch("https://api.aladhan.com/v1/timingsByCity?city=Cairo&country=Egypt")
+.then(res=>res.json())
+.then(data=>{
+  let t=data.data.timings;
+  document.getElementById("prayerTimes").innerHTML=`
+  الفجر: ${t.Fajr}<br>
+  الظهر: ${t.Dhuhr}<br>
+  العصر: ${t.Asr}<br>
+  المغرب: ${t.Maghrib}<br>
+  العشاء: ${t.Isha}
+  `;
+});
+
+/* Restore stats */
+document.getElementById("statsTasbeeh").innerText=count;
+document.getElementById("statsPages").innerText=pages;
+</script>
+
+</body>
+</html>
