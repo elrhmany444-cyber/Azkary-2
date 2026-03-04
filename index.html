@@ -206,47 +206,45 @@ transform:scale(.92);
 
 <script>
 
-/* ===== كل كود الموقع الأصلي كما هو ===== */
-/* (المواقيت – القرآن – السبحة – الحفظ) */
-/* لم يتم تعديل أي سطر */
-
 /* ===== السماء المتحركة ===== */
 
-const canvas=document.createElement("canvas");
-canvas.style.position="fixed";
-canvas.style.top="0";
-canvas.style.left="0";
-canvas.style.width="100%";
-canvas.style.height="100%";
-canvas.style.zIndex="-1";
-canvas.style.pointerEvents="none";
+const canvas = document.createElement("canvas");
+canvas.style.position = "fixed";
+canvas.style.top = "0";
+canvas.style.left = "0";
+canvas.style.width = "100%";
+canvas.style.height = "100%";
+canvas.style.zIndex = "-1";
+canvas.style.pointerEvents = "none";
 document.body.appendChild(canvas);
 
-const ctx=canvas.getContext("2d");
+const ctx = canvas.getContext("2d");
 
 let w,h;
 let stars=[];
-let meteors=[];
 
 function resize(){
-w=canvas.width=window.innerWidth;
-h=canvas.height=window.innerHeight;
+w = canvas.width = window.innerWidth;
+h = canvas.height = window.innerHeight;
 }
 window.addEventListener("resize",resize);
 resize();
+
+/* نجوم */
 
 class Star{
 constructor(){
 this.x=Math.random()*w;
 this.y=Math.random()*h;
-this.size=Math.random()*1.4;
-this.speed=Math.random()*0.15+0.02;
-this.opacity=Math.random();
+this.size=Math.random()*1.5;
+this.speed=Math.random()*0.1+0.02;
 }
+
 update(){
 this.y+=this.speed;
 if(this.y>h)this.y=0;
 }
+
 draw(){
 ctx.beginPath();
 ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
@@ -255,73 +253,66 @@ ctx.fill();
 }
 }
 
-for(let i=0;i<120;i++){stars.push(new Star())}
-
-class Meteor{
-constructor(){this.reset()}
-reset(){
-this.x=Math.random()*w;
-this.y=Math.random()*h*0.4;
-this.len=Math.random()*80+40;
-this.speed=Math.random()*6+4;
-this.opacity=1;
+for(let i=0;i<120;i++){
+stars.push(new Star());
 }
-update(){
-this.x+=this.speed;
-this.y+=this.speed;
-this.opacity-=0.02;
-if(this.opacity<=0)this.reset();
-}
-draw(){
-ctx.strokeStyle=`rgba(255,255,255,${this.opacity})`;
-ctx.lineWidth=2;
-ctx.beginPath();
-ctx.moveTo(this.x,this.y);
-ctx.lineTo(this.x-this.len,this.y-this.len);
-ctx.stroke();
-}
-}
-
-for(let i=0;i<3;i++){meteors.push(new Meteor())}
 
 function getTimePhase(){
+
 let hour=new Date().getHours();
-if(hour>=19||hour<5)return"night";
-if(hour>=5&&hour<8)return"sunrise";
-if(hour>=8&&hour<17)return"day";
-return"sunset";
+
+if(hour>=19 || hour<5) return "night";
+if(hour>=5 && hour<8) return "sunrise";
+if(hour>=8 && hour<17) return "day";
+return "sunset";
+
 }
 
 function drawSky(){
 
 let phase=getTimePhase();
 
+/* ليل */
+
 if(phase==="night"){
+
 let g=ctx.createLinearGradient(0,0,0,h);
 g.addColorStop(0,"#020111");
 g.addColorStop(1,"#0a1f44");
+
 ctx.fillStyle=g;
 ctx.fillRect(0,0,w,h);
 
-stars.forEach(s=>{s.update();s.draw()});
-meteors.forEach(m=>{m.update();m.draw()});
+stars.forEach(s=>{
+s.update();
+s.draw();
+});
 
 ctx.beginPath();
 ctx.arc(w-140,120,40,0,Math.PI*2);
-ctx.fillStyle="#f5f3ce";
+ctx.fillStyle="rgba(255,255,210,0.9)";
 ctx.fill();
 }
 
+/* نهار */
+
 if(phase==="day"){
+
 let g=ctx.createLinearGradient(0,0,0,h);
 g.addColorStop(0,"#6ec6ff");
-g.addColorStop(1,"#cfe9ff");
+g.addColorStop(1,"#dff3ff");
+
 ctx.fillStyle=g;
 ctx.fillRect(0,0,w,h);
 
 ctx.beginPath();
 ctx.arc(w-150,140,55,0,Math.PI*2);
 ctx.fillStyle="#ffd34d";
+ctx.fill();
+
+ctx.beginPath();
+ctx.arc(w-150,140,120,0,Math.PI*2);
+ctx.fillStyle="rgba(255,211,77,0.15)";
 ctx.fill();
 }
 
