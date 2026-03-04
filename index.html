@@ -3,43 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AZKAR</title>
+<title>أذكاري</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Amiri&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
 
 body{
-background:linear-gradient(160deg,#08172f,#102e63 40%,#c9a227 140%);
+background:linear-gradient(135deg,#0a1f44,#c9a227);
 min-height:110vh;
 color:white;
 display:flex;
 flex-direction:column;
 align-items:center;
 padding:20px;
-}
-
-.app-title{
-font-size:28px;
-font-weight:800;
-margin-bottom:20px;
-color:#f7d774;
+overflow-x:hidden;
 }
 
 .card{
-background:rgba(255,255,255,.08);
+background:rgba(255,255,255,.12);
 backdrop-filter:blur(15px);
 padding:20px;
 border-radius:20px;
 width:100%;
 max-width:420px;
 margin-bottom:20px;
-box-shadow:0 15px 35px rgba(0,0,0,.5);
+box-shadow:0 15px 30px rgba(0,0,0,.4);
 }
 
-select{
-font-family:'Amiri',serif;
+h2{text-align:center;margin-bottom:10px;font-weight:800}
+
+.location{
+text-align:center;
+font-size:14px;
+margin-bottom:10px;
+color:#f4d03f;
+}
+
+.countdown-bar{
+background:linear-gradient(45deg,#c9a227,#f4d03f);
+color:#0a1f44;
+padding:10px;
+border-radius:15px;
+text-align:center;
+font-weight:700;
+margin-bottom:15px;
+}
+
+.prayer-time{
+display:flex;
+justify-content:space-between;
+margin:8px 0;
+font-weight:600;
 }
 
 select,button{
@@ -53,9 +69,35 @@ font-weight:600;
 }
 
 button{
-background:linear-gradient(45deg,#f7d774,#d4a514);
-color:#08172f;
+background:linear-gradient(45deg,#c9a227,#f4d03f);
+color:#0a1f44;
 cursor:pointer;
+}
+
+.custom-player{margin-top:15px}
+
+.progress-container{
+width:100%;
+height:8px;
+background:rgba(255,255,255,.3);
+border-radius:20px;
+cursor:pointer;
+overflow:hidden;
+}
+
+.progress{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#f4d03f,#c9a227);
+transition:.2s;
+}
+
+.time{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+margin-top:6px;
+opacity:.8;
 }
 
 /* سبحة */
@@ -70,8 +112,8 @@ align-items:center;
 }
 
 .tasbeeh-count{
-background:#d4a514;
-color:#08172f;
+background:#c9a227;
+color:#0a1f44;
 padding:6px 18px;
 border-radius:20px;
 margin-bottom:12px;
@@ -79,16 +121,16 @@ font-weight:800;
 }
 
 .tasbeeh-btn{
-width:105px;
-height:105px;
+width:110px;
+height:110px;
 border-radius:50%;
-background:radial-gradient(circle at center,#f7d774 30%,#d4a514 80%);
+background:radial-gradient(circle at center,#f4d03f 30%,#c9a227 70%);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:55px;
+font-size:58px;
 cursor:pointer;
-box-shadow:0 12px 25px rgba(0,0,0,.6);
+box-shadow:0 15px 30px rgba(0,0,0,.6);
 position:relative;
 }
 
@@ -98,20 +140,22 @@ position:absolute;
 width:130px;
 height:130px;
 border-radius:50%;
-border:10px dotted #f7d774;
-animation:spin 15s linear infinite;
+border:12px dotted #f4d03f;
+animation:rotate 15s linear infinite;
 }
 
-@keyframes spin{
+@keyframes rotate{
 from{transform:rotate(0)}
 to{transform:rotate(360deg)}
+}
+
+.tasbeeh-btn:active{
+transform:scale(.92);
 }
 </style>
 </head>
 
 <body>
-
-<div class="app-title">AZKAR</div>
 
 <div class="card">
 <h2>📖 القرآن الكريم</h2>
@@ -120,14 +164,24 @@ to{transform:rotate(360deg)}
 <option value="ar.alafasy">مشاري العفاسي</option>
 <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
 <option value="ar.faresabbad">فارس عباد</option>
-<option value="ar.abdurrahmanalsudais">عبد الرحمن السديس</option>
+<option value="ar.abdurrahmansudais">عبد الرحمن السديس</option>
 </select>
 
 <select id="surahSelect"></select>
 
-<button onclick="playSurah()">▶ تشغيل</button>
+<button id="playBtn" onclick="togglePlay()">▶ تشغيل</button>
 
-<audio id="audioPlayer" controls style="width:100%;margin-top:10px;"></audio>
+<div class="custom-player">
+<div class="progress-container" onclick="seekAudio(event)">
+<div class="progress" id="progressBar"></div>
+</div>
+<div class="time">
+<span id="currentTime">0:00</span>
+<span id="duration">0:00</span>
+</div>
+</div>
+
+<audio id="audioPlayer"></audio>
 </div>
 
 <div class="tasbeeh-wrapper">
@@ -137,40 +191,92 @@ to{transform:rotate(360deg)}
 
 <script>
 
-/* تحميل أسماء السور بالتشكيل */
+/* تحميل السور */
 let surahSelect=document.getElementById("surahSelect");
-
 fetch("https://api.alquran.cloud/v1/surah")
-.then(res=>res.json())
-.then(data=>{
-data.data.forEach(surah=>{
-let option=document.createElement("option");
-option.value=surah.number;
-option.textContent=surah.name;
-surahSelect.appendChild(option);
+.then(r=>r.json())
+.then(d=>{
+d.data.forEach(x=>{
+let o=document.createElement("option");
+o.value=x.number;
+o.textContent=x.name;
+surahSelect.appendChild(o);
 });
 });
 
-/* تشغيل السورة من API */
-function playSurah(){
-let surah=surahSelect.value;
-let reciter=document.getElementById("reciterSelect").value;
+/* تشغيل */
+let currentSurah=1;
 let audio=document.getElementById("audioPlayer");
+let playBtn=document.getElementById("playBtn");
+let reciterSelect=document.getElementById("reciterSelect");
 
-fetch(`https://api.alquran.cloud/v1/surah/${surah}/${reciter}`)
-.then(res=>res.json())
-.then(data=>{
-audio.src=data.data.audio;
+function loadSurah(){
+let surah=surahSelect.value;
+let reciter=reciterSelect.value;
+audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${reciter}/${surah}.mp3`;
+audio.load();
+currentSurah=parseInt(surah);
+}
+
+function togglePlay(){
+if(audio.src===""){
+loadSurah();
 audio.play();
-});
+playBtn.innerText="⏸ إيقاف";
+return;
+}
+if(audio.paused){
+audio.play();
+playBtn.innerText="⏸ إيقاف";
+}else{
+audio.pause();
+playBtn.innerText="▶ تشغيل";
+}
+}
+
+surahSelect.onchange=()=>{loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";}
+reciterSelect.onchange=()=>{loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";}
+
+audio.onended=function(){
+if(currentSurah<114){
+currentSurah++;
+surahSelect.value=currentSurah;
+loadSurah();
+audio.play();
+}
+}
+
+audio.ontimeupdate=function(){
+if(!audio.duration)return;
+let percent=(audio.currentTime/audio.duration)*100;
+document.getElementById("progressBar").style.width=percent+"%";
+document.getElementById("currentTime").innerText=formatTime(audio.currentTime);
+document.getElementById("duration").innerText=formatTime(audio.duration);
+}
+
+function seekAudio(e){
+let width=e.currentTarget.clientWidth;
+let clickX=e.offsetX;
+audio.currentTime=(clickX/width)*audio.duration;
+}
+
+function formatTime(sec){
+if(isNaN(sec)) return "0:00";
+let m=Math.floor(sec/60);
+let s=Math.floor(sec%60);
+if(s<10)s="0"+s;
+return m+":"+s;
 }
 
 /* سبحة */
-let tasbeehCounter=0;
+let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
+document.getElementById("tasbeehCount").innerText=tasbeehCounter;
+
 function tasbeehClick(){
 tasbeehCounter++;
+localStorage.setItem("tasbeeh",tasbeehCounter);
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
-if(navigator.vibrate)navigator.vibrate(50);
+if(navigator.vibrate)navigator.vibrate(40);
 }
 
 </script>
