@@ -21,7 +21,6 @@ padding:20px;
 overflow-x:hidden;
 }
 
-/* اسم التطبيق فوق */
 .app-title{
 font-size:26px;
 font-weight:800;
@@ -30,7 +29,6 @@ letter-spacing:2px;
 color:#f4d03f;
 }
 
-/* اسمك في الخلفية */
 .brand-bg{
 position:fixed;
 top:55%;
@@ -45,7 +43,6 @@ z-index:0;
 pointer-events:none;
 }
 
-/* الكروت */
 .card{
 background:rgba(255,255,255,.12);
 backdrop-filter:blur(15px);
@@ -101,7 +98,6 @@ color:#0a1f44;
 cursor:pointer;
 }
 
-/* مشغل */
 .custom-player{margin-top:15px}
 
 .progress-container{
@@ -128,7 +124,6 @@ margin-top:6px;
 opacity:.8;
 }
 
-/* سبحة */
 .tasbeeh-wrapper{
 position:fixed;
 bottom:30px;
@@ -188,7 +183,6 @@ transform:scale(.9);
 <body>
 
 <div class="brand-bg">Rhmany</div>
-
 <div class="app-title">AZKAR</div>
 
 <div class="card">
@@ -202,15 +196,15 @@ transform:scale(.9);
 <h2>📖 القرآن الكريم</h2>
 
 <select id="reciterSelect">
-<option value="ar.alafasy">مشاري العفاسي</option>
-<option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
-<option value="ar.faresabbad">فارس عباد</option>
-<option value="ar.abdurrahmanalsudais">عبد الرحمن السديس</option>
+<option value="mishary_alafasy">مشاري العفاسي</option>
+<option value="abdul_basit_murattal">عبدالباسط عبدالصمد</option>
+<option value="fares_abbad">فارس عباد</option>
+<option value="abdurrahmaan_as-sudais">عبد الرحمن السديس</option>
 </select>
 
 <select id="surahSelect"></select>
 
-<button id="playBtn" onclick="togglePlay()">▶ تشغيل</button>
+<button id="playBtn">▶ تشغيل</button>
 
 <div class="custom-player">
 <div class="progress-container" onclick="seekAudio(event)">
@@ -232,18 +226,93 @@ transform:scale(.9);
 
 <script>
 
-/* اهتزاز أقوى للسبحة */
+/* ===== السور ثابتة ===== */
+const surahs=[
+"الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس",
+"هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه",
+"الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم",
+"لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر",
+"فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق",
+"الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة",
+"الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج",
+"نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس",
+"التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد",
+"الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات",
+"القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر",
+"المسد","الإخلاص","الفلق","الناس"
+];
+
+let surahSelect=document.getElementById("surahSelect");
+surahs.forEach((name,i)=>{
+let o=document.createElement("option");
+o.value=(i+1).toString().padStart(3,'0');
+o.textContent=`${i+1} - ${name}`;
+surahSelect.appendChild(o);
+});
+
+/* ===== مشغل ===== */
+let audio=document.getElementById("audioPlayer");
+let playBtn=document.getElementById("playBtn");
+let reciterSelect=document.getElementById("reciterSelect");
+let currentSurah=1;
+
+function loadSurah(){
+let surah=surahSelect.value;
+let reciter=reciterSelect.value;
+audio.src=`https://download.quranicaudio.com/quran/${reciter}/${surah}.mp3`;
+audio.load();
+currentSurah=parseInt(surah);
+}
+
+playBtn.onclick=function(){
+if(audio.src===""){loadSurah();}
+if(audio.paused){audio.play();playBtn.innerText="⏸ إيقاف";}
+else{audio.pause();playBtn.innerText="▶ تشغيل";}
+};
+
+surahSelect.onchange=function(){loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";};
+reciterSelect.onchange=function(){loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";};
+
+audio.onended=function(){
+if(currentSurah<114){
+currentSurah++;
+surahSelect.value=currentSurah.toString().padStart(3,'0');
+loadSurah();
+audio.play();
+}
+};
+
+audio.ontimeupdate=function(){
+if(!audio.duration)return;
+let percent=(audio.currentTime/audio.duration)*100;
+document.getElementById("progressBar").style.width=percent+"%";
+document.getElementById("currentTime").innerText=format(audio.currentTime);
+document.getElementById("duration").innerText=format(audio.duration);
+};
+
+function seekAudio(e){
+let width=e.currentTarget.clientWidth;
+let clickX=e.offsetX;
+audio.currentTime=(clickX/width)*audio.duration;
+}
+
+function format(sec){
+let m=Math.floor(sec/60);
+let s=Math.floor(sec%60);
+if(s<10)s="0"+s;
+return m+":"+s;
+}
+
+/* سبحة */
+let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
+document.getElementById("tasbeehCount").innerText=tasbeehCounter;
+
 function tasbeehClick(){
 tasbeehCounter++;
 localStorage.setItem("tasbeeh",tasbeehCounter);
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
-if(navigator.vibrate) navigator.vibrate([60,40,60]);
+if(navigator.vibrate)navigator.vibrate([60,40,60]);
 }
-
-let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
-document.getElementById("tasbeehCount").innerText=tasbeehCounter;
-
-/* باقي السكربت زي النسخة السابقة بدون تغيير في المنطق */
 
 </script>
 
