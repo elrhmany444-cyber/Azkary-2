@@ -1,331 +1,178 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZKAR</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Amiri&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body {
-            background: linear-gradient(160deg, #08172f, #102e63 40%, #c9a227 140%);
-            min-height: 115vh;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-        .app-title {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-            color: #f7d774;
-            text-shadow: 0 0 20px rgba(255, 215, 0, .4);
-        }
-        .card {
-            background: rgba(255, 255, 255, .08);
-            backdrop-filter: blur(18px);
-            padding: 20px;
-            border-radius: 22px;
-            width: 100%;
-            max-width: 420px;
-            margin-bottom: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, .45);
-        }
-        .countdown-bar {
-            padding: 10px;
-            border-radius: 15px;
-            text-align: center;
-            font-weight: 700;
-            margin-bottom: 15px;
-            background: linear-gradient(90deg, #f7d774, #d4a514);
-            color: #08172f;
-            box-shadow: 0 0 15px rgba(255, 215, 0, .4);
-        }
-        .location {
-            text-align: center;
-            font-size: 14px;
-            margin-bottom: 10px;
-            color: #f7d774;
-        }
-        .prayer-time {
-            display: flex;
-            justify-content: space-between;
-            margin: 8px 0;
-            font-weight: 600;
-        }
-        select {
-            font-family: 'Amiri', serif;
-        }
-        select, button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 600;
-        }
-        button {
-            background: linear-gradient(45deg, #f7d774, #d4a514);
-            color: #08172f;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, .3);
-        }
-        .custom-player {
-            margin-top: 15px;
-        }
-        .progress-container {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, .2);
-            border-radius: 20px;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #f7d774, #d4a514);
-            box-shadow: 0 0 10px rgba(255, 215, 0, .6);
-        }
-        .time {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            margin-top: 6px;
-            opacity: .85;
-        }
-        .tasbeeh-wrapper {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .tasbeeh-count {
-            background: #d4a514;
-            color: #08172f;
-            padding: 6px 18px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            font-weight: 800;
-        }
-        .tasbeeh-btn {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: radial-gradient(circle at center, #f7d774 30%, #d4a514 80%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 52px;
-            cursor: pointer;
-            box-shadow: 0 12px 25px rgba(0, 0, 0, .6);
-            transition: .2s;
-        }
-        .tasbeeh-btn:active { transform: scale(.9); }
-        #loading {
-            color: #f7d774;
-            display: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZKAR</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Amiri&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
+
+body{
+background:linear-gradient(160deg,#08172f,#102e63 40%,#c9a227 140%);
+min-height:110vh;
+color:white;
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:20px;
+}
+
+.app-title{
+font-size:28px;
+font-weight:800;
+margin-bottom:20px;
+color:#f7d774;
+}
+
+.card{
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(15px);
+padding:20px;
+border-radius:20px;
+width:100%;
+max-width:420px;
+margin-bottom:20px;
+box-shadow:0 15px 35px rgba(0,0,0,.5);
+}
+
+select{
+font-family:'Amiri',serif;
+}
+
+select,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:12px;
+font-size:15px;
+font-weight:600;
+}
+
+button{
+background:linear-gradient(45deg,#f7d774,#d4a514);
+color:#08172f;
+cursor:pointer;
+}
+
+/* سبحة */
+.tasbeeh-wrapper{
+position:fixed;
+bottom:30px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.tasbeeh-count{
+background:#d4a514;
+color:#08172f;
+padding:6px 18px;
+border-radius:20px;
+margin-bottom:12px;
+font-weight:800;
+}
+
+.tasbeeh-btn{
+width:105px;
+height:105px;
+border-radius:50%;
+background:radial-gradient(circle at center,#f7d774 30%,#d4a514 80%);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:55px;
+cursor:pointer;
+box-shadow:0 12px 25px rgba(0,0,0,.6);
+position:relative;
+}
+
+.tasbeeh-btn::before{
+content:"";
+position:absolute;
+width:130px;
+height:130px;
+border-radius:50%;
+border:10px dotted #f7d774;
+animation:spin 15s linear infinite;
+}
+
+@keyframes spin{
+from{transform:rotate(0)}
+to{transform:rotate(360deg)}
+}
+</style>
 </head>
 
 <body>
 
 <div class="app-title">AZKAR</div>
-<div id="loading">جاري التحميل...</div>
 
 <div class="card">
-    <h2>🕌 مواقيت الصلاة</h2>
-    <div class="location" id="locationText">جاري تحديد الموقع...</div>
-    <div class="countdown-bar" id="countdownBar">...</div>
-    <div id="prayers"></div>
-</div>
+<h2>📖 القرآن الكريم</h2>
 
-<div class="card">
-    <h2>📖 القرآن الكريم</h2>
-    <select id="reciterSelect">
-        <option value="ar.alafasy">مشاري العفاسي</option>
-        <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
-        <option value="ar.faresabbad">فارس عباد</option>
-        <option value="ar.abdurrahmanalsudais">عبد الرحمن السديس</option>
-    </select>
+<select id="reciterSelect">
+<option value="ar.alafasy">مشاري العفاسي</option>
+<option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
+<option value="ar.faresabbad">فارس عباد</option>
+<option value="ar.abdurrahmanalsudais">عبد الرحمن السديس</option>
+</select>
 
-    <select id="surahSelect"></select>
+<select id="surahSelect"></select>
 
-    <button id="playBtn">▶ تشغيل</button>
+<button onclick="playSurah()">▶ تشغيل</button>
 
-    <div class="custom-player">
-        <div class="progress-container" onclick="seekAudio(event)">
-            <div class="progress" id="progressBar"></div>
-        </div>
-        <div class="time">
-            <span id="currentTime">0:00</span>
-            <span id="duration">0:00</span>
-        </div>
-    </div>
-
-    <audio id="audioPlayer"></audio>
+<audio id="audioPlayer" controls style="width:100%;margin-top:10px;"></audio>
 </div>
 
 <div class="tasbeeh-wrapper">
-    <div class="tasbeeh-count" id="tasbeehCount">0</div>
-    <div class="tasbeeh-btn" onclick="tasbeehClick()">📿</div>
+<div class="tasbeeh-count" id="tasbeehCount">0</div>
+<div class="tasbeeh-btn" onclick="tasbeehClick()">📿</div>
 </div>
 
 <script>
-    let surahSelect = document.getElementById("surahSelect");
 
-    // طلب قائمة السور
-    fetch("https://api.alquran.cloud/v1/surah")
-        .then(res => res.json())
-        .then(data => {
-            data.data.forEach(surah => {
-                let option = document.createElement("option");
-                option.value = surah.number;
-                option.textContent = surah.name;
-                surahSelect.appendChild(option);
-            });
-        })
-        .catch(err => console.error("Error fetching surahs:", err));
+/* تحميل أسماء السور بالتشكيل */
+let surahSelect=document.getElementById("surahSelect");
 
-    // تشغيل القرآن
-    let audio = document.getElementById("audioPlayer");
-    let playBtn = document.getElementById("playBtn");
-    let reciterSelect = document.getElementById("reciterSelect");
-    let currentSurah = 1;
+fetch("https://api.alquran.cloud/v1/surah")
+.then(res=>res.json())
+.then(data=>{
+data.data.forEach(surah=>{
+let option=document.createElement("option");
+option.value=surah.number;
+option.textContent=surah.name;
+surahSelect.appendChild(option);
+});
+});
 
-    function showLoading() {
-        document.getElementById("loading").style.display = "block";
-    }
+/* تشغيل السورة من API */
+function playSurah(){
+let surah=surahSelect.value;
+let reciter=document.getElementById("reciterSelect").value;
+let audio=document.getElementById("audioPlayer");
 
-    function hideLoading() {
-        document.getElementById("loading").style.display = "none";
-    }
+fetch(`https://api.alquran.cloud/v1/surah/${surah}/${reciter}`)
+.then(res=>res.json())
+.then(data=>{
+audio.src=data.data.audio;
+audio.play();
+});
+}
 
-    function loadSurah() {
-        let surah = surahSelect.value;
-        let reciter = reciterSelect.value;
+/* سبحة */
+let tasbeehCounter=0;
+function tasbeehClick(){
+tasbeehCounter++;
+document.getElementById("tasbeehCount").innerText=tasbeehCounter;
+if(navigator.vibrate)navigator.vibrate(50);
+}
 
-        showLoading();
-        fetch(`https://api.alquran.cloud/v1/surah/${surah}/${reciter}`)
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (data.data && data.data.audio) {
-                    audio.src = data.data.audio;
-                    audio.load();
-                    currentSurah = parseInt(surah);
-                    audio.play();
-                    playBtn.innerText = "⏸ إيقاف";
-                } else {
-                    console.error("Invalid data format:", data);
-                }
-                hideLoading();
-            })
-            .catch(err => {
-                hideLoading();
-                console.error("Error loading surah:", err);
-            });
-    }
-
-    playBtn.onclick = function () {
-        if (audio.paused) {
-            audio.play();
-            playBtn.innerText = "⏸ إيقاف";
-        } else {
-            audio.pause();
-            playBtn.innerText = "▶ تشغيل";
-        }
-    };
-
-    surahSelect.onchange = loadSurah;
-    reciterSelect.onchange = loadSurah;
-
-    audio.onended = function () {
-        if (currentSurah < 114) {
-            currentSurah++;
-            surahSelect.value = currentSurah;
-            loadSurah();
-        }
-    };
-
-    audio.ontimeupdate = function () {
-        if (!audio.duration) return;
-        let percent = (audio.currentTime / audio.duration) * 100;
-        document.getElementById("progressBar").style.width = percent + "%";
-        document.getElementById("currentTime").innerText = format(audio.currentTime);
-        document.getElementById("duration").innerText = format(audio.duration);
-    };
-
-    function seekAudio(e) {
-        let width = e.currentTarget.clientWidth;
-        let clickX = e.offsetX;
-        audio.currentTime = (clickX / width) * audio.duration;
-    }
-
-    function format(sec) {
-        let m = Math.floor(sec / 60);
-        let s = Math.floor(sec % 60);
-        if (s < 10) s = "0" + s;
-        return m + ":" + s;
-    }
-
-    // سبحة
-    let tasbeehCounter = localStorage.getItem("tasbeeh") || 0;
-    document.getElementById("tasbeehCount").innerText = tasbeehCounter;
-
-    function tasbeehClick() {
-        tasbeehCounter++;
-        localStorage.setItem("tasbeeh", tasbeehCounter);
-        document.getElementById("tasbeehCount").innerText = tasbeehCounter;
-        if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
-    }
-
-    // مواقيت الصلاة
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            let lat = pos.coords.latitude;
-            let lon = pos.coords.longitude;
-
-            showLoading();
-            fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`)
-                .then(r => {
-                    if (!r.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return r.json();
-                })
-                .then(d => {
-                    hideLoading();
-                    let t = d.data.timings;
-                    document.getElementById("prayers").innerHTML = `
-                        <div class="prayer-time"><span>الفجر</span><span>${t.Fajr}</span></div>
-                        <div class="prayer-time"><span>الظهر</span><span>${t.Dhuhr}</span></div>
-                        <div class="prayer-time"><span>العصر</span><span>${t.Asr}</span></div>
-                        <div class="prayer-time"><span>المغرب</span><span>${t.Maghrib}</span></div>
-                        <div class="prayer-time"><span>العشاء</span><span>${t.Isha}</span></div>
-                    `;
-                })
-                .catch(err => {
-                    hideLoading();
-                    console.error("Error fetching prayer times:", err);
-                });
-        }, () => {
-            document.getElementById("locationText").innerText = "تعذر تحديد الموقع.";
-        });
-    }
 </script>
 
 </body>
