@@ -157,6 +157,15 @@ transform:scale(.92);
 
 <body>
 
+<!-- مواقيت الصلاة -->
+<div class="card">
+<h2>🕌 مواقيت الصلاة</h2>
+<div class="location" id="locationText">جاري تحديد الموقع...</div>
+<div class="countdown-bar" id="countdownBar">...</div>
+<div id="prayers"></div>
+</div>
+
+<!-- القرآن -->
 <div class="card">
 <h2>📖 القرآن الكريم</h2>
 
@@ -164,7 +173,7 @@ transform:scale(.92);
 <option value="ar.alafasy">مشاري العفاسي</option>
 <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
 <option value="ar.faresabbad">فارس عباد</option>
-<option value="ar.abdurrahmansudais">عبد الرحمن السديس</option>
+<option value="ar.mahermuaiqly">ماهر المعيقلي</option>
 </select>
 
 <select id="surahSelect"></select>
@@ -184,6 +193,7 @@ transform:scale(.92);
 <audio id="audioPlayer"></audio>
 </div>
 
+<!-- سبحة -->
 <div class="tasbeeh-wrapper">
 <div class="tasbeeh-count" id="tasbeehCount">0</div>
 <div class="tasbeeh-btn" onclick="tasbeehClick()">📿</div>
@@ -191,8 +201,92 @@ transform:scale(.92);
 
 <script>
 
-/* تحميل السور */
+/* ===== GPS ===== */
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(
+pos=>{
+let lat=pos.coords.latitude;
+let lon=pos.coords.longitude;
+reverseGeocode(lat,lon);
+getPrayerTimes(lat,lon);
+},
+()=>{document.getElementById("locationText").innerText="فشل تحديد الموقع"},
+{enableHighAccuracy:true}
+);
+}
+
+function reverseGeocode(lat,lon){
+fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+.then(r=>r.json())
+.then(d=>{
+let city=d.address.city||d.address.town||d.address.village||"غير معروف";
+document.getElementById("locationText").innerText=`موقعك: ${city}`;
+});
+}
+
+/* ===== مواقيت ===== */
+let countdownInterval;
+
+function getPrayerTimes(lat,lon){
+fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`)
+.then(r=>r.json())
+.then(d=>{
+let t=d.data.timings;
+
+document.getElementById("prayers").innerHTML=`
+<div class="prayer-time"><span>الفجر</span><span>${t.Fajr}</span></div>
+<div class="prayer-time"><span>الظهر</span><span>${t.Dhuhr}</span></div>
+<div class="prayer-time"><span>العصر</span><span>${t.Asr}</span></div>
+<div class="prayer-time"><span>المغرب</span><span>${t.Maghrib}</span></div>
+<div class="prayer-time"><span>العشاء</span><span>${t.Isha}</span></div>
+`;
+
+calculateNextPrayer(t);
+});
+}
+
+function calculateNextPrayer(times){
+if(countdownInterval) clearInterval(countdownInterval);
+
+let prayers=["Fajr","Dhuhr","Asr","Maghrib","Isha"];
+let now=new Date();
+let next=null;
+
+for(let p of prayers){
+let [h,m]=times[p].split(":");
+let pt=new Date();
+pt.setHours(h,m,0);
+if(pt>now){next=pt;break;}
+}
+
+if(!next){
+let [h,m]=times["Fajr"].split(":");
+next=new Date();
+next.setDate(next.getDate()+1);
+next.setHours(h,m,0);
+}
+
+countdownInterval=setInterval(()=>{
+let diff=next-new Date();
+if(diff<=0){
+clearInterval(countdownInterval);
+document.getElementById("countdownBar").innerText="حان وقت الصلاة 🕌";
+return;
+}
+let h=Math.floor(diff/3600000);
+let m=Math.floor((diff%3600000)/60000);
+let s=Math.floor((diff%60000)/1000);
+document.getElementById("countdownBar").innerText=`متبقي ${h}س ${m}د ${s}ث`;
+},1000);
+}
+
+/* ===== قرآن ===== */
+let currentSurah=1;
+let audio=document.getElementById("audioPlayer");
+let playBtn=document.getElementById("playBtn");
 let surahSelect=document.getElementById("surahSelect");
+let reciterSelect=document.getElementById("reciterSelect");
+
 fetch("https://api.alquran.cloud/v1/surah")
 .then(r=>r.json())
 .then(d=>{
@@ -203,12 +297,6 @@ o.textContent=x.name;
 surahSelect.appendChild(o);
 });
 });
-
-/* تشغيل */
-let currentSurah=1;
-let audio=document.getElementById("audioPlayer");
-let playBtn=document.getElementById("playBtn");
-let reciterSelect=document.getElementById("reciterSelect");
 
 function loadSurah(){
 let surah=surahSelect.value;
@@ -268,7 +356,7 @@ if(s<10)s="0"+s;
 return m+":"+s;
 }
 
-/* سبحة */
+/* ===== سبحة ===== */
 let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
 
