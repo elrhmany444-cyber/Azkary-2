@@ -18,10 +18,25 @@ display:flex;
 flex-direction:column;
 align-items:center;
 padding:20px;
+overflow-x:hidden;
 }
 
-/* الكروت */
+/* Watermark */
+.brand-bg{
+position:fixed;
+bottom:45%;
+left:50%;
+transform:translate(-50%,50%);
+font-size:75px;
+font-weight:900;
+color:rgba(255,215,0,0.08);
+z-index:0;
+pointer-events:none;
+user-select:none;
+letter-spacing:6px;
+}
 
+/* Cards */
 .card{
 background:rgba(255,255,255,.12);
 backdrop-filter:blur(15px);
@@ -31,6 +46,8 @@ width:100%;
 max-width:420px;
 margin-bottom:20px;
 box-shadow:0 15px 30px rgba(0,0,0,.4);
+position:relative;
+z-index:2;
 }
 
 h2{text-align:center;margin-bottom:10px;font-weight:800}
@@ -75,10 +92,34 @@ color:#0a1f44;
 cursor:pointer;
 }
 
-audio{width:100%;margin-top:10px}
+/* Custom Player */
+.custom-player{margin-top:15px}
 
-/* سبحة أول تصميم مع تكبير الإيموجي */
+.progress-container{
+width:100%;
+height:8px;
+background:rgba(255,255,255,.3);
+border-radius:20px;
+cursor:pointer;
+overflow:hidden;
+}
 
+.progress{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#f4d03f,#c9a227);
+transition:.2s;
+}
+
+.time{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+margin-top:6px;
+opacity:.8;
+}
+
+/* Tasbeeh */
 .tasbeeh-wrapper{
 position:fixed;
 bottom:30px;
@@ -87,6 +128,7 @@ transform:translateX(-50%);
 display:flex;
 flex-direction:column;
 align-items:center;
+z-index:3;
 }
 
 .tasbeeh-count{
@@ -108,7 +150,7 @@ position:relative;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:58px; /* الإيموجي مكبّر */
+font-size:58px;
 line-height:1;
 cursor:pointer;
 box-shadow:0 15px 30px rgba(0,0,0,.6);
@@ -133,18 +175,12 @@ to{transform:rotate(360deg)}
 .tasbeeh-btn:active{
 transform:scale(.92);
 }
-
-/* الفوتر */
-
-.footer{
-margin-top:60px;
-font-size:14px;
-opacity:.8;
-}
 </style>
 </head>
 
 <body>
+
+<div class="brand-bg">رحماني</div>
 
 <div class="card">
 <h2>🕌 مواقيت الصلاة</h2>
@@ -160,23 +196,29 @@ opacity:.8;
 <option value="ar.alafasy">مشاري العفاسي</option>
 <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
 <option value="ar.faresabbad">فارس عباد</option>
-<option value="ar.abdurrahmaansudais">عبد الرحمن السديس</option>
+<option value="ar.abdurrahmanalsudais">عبد الرحمن السديس</option>
 </select>
 
 <select id="surahSelect"></select>
 
-<button onclick="playSurah()">تشغيل السورة</button>
+<button id="playBtn" onclick="togglePlay()">▶ تشغيل</button>
 
-<audio id="audioPlayer" controls></audio>
+<div class="custom-player">
+<div class="progress-container" onclick="seekAudio(event)">
+<div class="progress" id="progressBar"></div>
+</div>
+<div class="time">
+<span id="currentTime">0:00</span>
+<span id="duration">0:00</span>
+</div>
+</div>
+
+<audio id="audioPlayer"></audio>
 </div>
 
 <div class="tasbeeh-wrapper">
 <div class="tasbeeh-count" id="tasbeehCount">0</div>
-<div class="tasbeeh-btn" id="tasbeehBtn" onclick="tasbeehClick()">📿</div>
-</div>
-
-<div class="footer">
-تم التصميم بواسطة Rhmany
+<div class="tasbeeh-btn" onclick="tasbeehClick()">📿</div>
 </div>
 
 <script>
@@ -195,7 +237,6 @@ getPrayerTimes(lat,lon);
 );
 }
 
-/* اسم المدينة */
 function reverseGeocode(lat,lon){
 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
 .then(r=>r.json())
@@ -205,7 +246,7 @@ document.getElementById("locationText").innerText=`موقعك: ${city}`;
 });
 }
 
-/* مواقيت الصلاة */
+/* Prayer */
 let countdownInterval;
 
 function getPrayerTimes(lat,lon){
@@ -228,7 +269,6 @@ calculateNextPrayer(t);
 
 function calculateNextPrayer(times){
 if(countdownInterval) clearInterval(countdownInterval);
-
 let prayers=["Fajr","Dhuhr","Asr","Maghrib","Isha"];
 let now=new Date();
 let next=null;
@@ -257,12 +297,15 @@ return;
 let h=Math.floor(diff/3600000);
 let m=Math.floor((diff%3600000)/60000);
 let s=Math.floor((diff%60000)/1000);
-
 document.getElementById("countdownBar").innerText=`متبقي ${h}س ${m}د ${s}ث`;
 },1000);
 }
 
-/* تحميل السور */
+/* Quran */
+let currentSurah=1;
+let audio=document.getElementById("audioPlayer");
+let playBtn=document.getElementById("playBtn");
+
 fetch("https://api.alquran.cloud/v1/surah")
 .then(r=>r.json())
 .then(d=>{
@@ -275,16 +318,50 @@ s.appendChild(o);
 });
 });
 
-/* تشغيل السورة */
-function playSurah(){
-let surah=document.getElementById("surahSelect").value;
+function loadSurah(surah){
 let reciter=document.getElementById("reciterSelect").value;
-let audio=document.getElementById("audioPlayer");
 audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${reciter}/${surah}.mp3`;
-audio.play();
+currentSurah=parseInt(surah);
 }
 
-/* السبحة بدون رقم محدد */
+function togglePlay(){
+let selected=document.getElementById("surahSelect").value;
+if(audio.src===""){loadSurah(selected);audio.play();playBtn.innerText="⏸ إيقاف";return;}
+if(audio.paused){audio.play();playBtn.innerText="⏸ إيقاف";}
+else{audio.pause();playBtn.innerText="▶ تشغيل";}
+}
+
+audio.addEventListener("timeupdate",()=>{
+let percent=(audio.currentTime/audio.duration)*100;
+document.getElementById("progressBar").style.width=percent+"%";
+document.getElementById("currentTime").innerText=formatTime(audio.currentTime);
+document.getElementById("duration").innerText=formatTime(audio.duration);
+});
+
+audio.addEventListener("ended",()=>{
+if(currentSurah<114){
+currentSurah++;
+document.getElementById("surahSelect").value=currentSurah;
+loadSurah(currentSurah);
+audio.play();
+}
+});
+
+function seekAudio(e){
+let width=e.currentTarget.clientWidth;
+let clickX=e.offsetX;
+audio.currentTime=(clickX/width)*audio.duration;
+}
+
+function formatTime(sec){
+if(isNaN(sec)) return "0:00";
+let m=Math.floor(sec/60);
+let s=Math.floor(sec%60);
+if(s<10) s="0"+s;
+return m+":"+s;
+}
+
+/* Tasbeeh */
 let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
 
