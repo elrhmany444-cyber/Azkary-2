@@ -21,22 +21,20 @@ padding:20px;
 overflow-x:hidden;
 }
 
-/* Watermark */
-.brand-bg{
+/* الاسم تحت */
+.brand-footer{
 position:fixed;
-bottom:45%;
+bottom:8px;
 left:50%;
-transform:translate(-50%,50%);
-font-size:75px;
-font-weight:900;
-color:rgba(255,215,0,0.08);
-z-index:0;
+transform:translateX(-50%);
+font-size:14px;
+font-weight:700;
+letter-spacing:3px;
+color:rgba(255,215,0,0.6);
 pointer-events:none;
-user-select:none;
-letter-spacing:6px;
 }
 
-/* Cards */
+/* الكروت */
 .card{
 background:rgba(255,255,255,.12);
 backdrop-filter:blur(15px);
@@ -46,8 +44,6 @@ width:100%;
 max-width:420px;
 margin-bottom:20px;
 box-shadow:0 15px 30px rgba(0,0,0,.4);
-position:relative;
-z-index:2;
 }
 
 h2{text-align:center;margin-bottom:10px;font-weight:800}
@@ -92,7 +88,7 @@ color:#0a1f44;
 cursor:pointer;
 }
 
-/* Custom Player */
+/* مشغل */
 .custom-player{margin-top:15px}
 
 .progress-container{
@@ -119,7 +115,7 @@ margin-top:6px;
 opacity:.8;
 }
 
-/* Tasbeeh */
+/* سبحة */
 .tasbeeh-wrapper{
 position:fixed;
 bottom:30px;
@@ -128,7 +124,6 @@ transform:translateX(-50%);
 display:flex;
 flex-direction:column;
 align-items:center;
-z-index:3;
 }
 
 .tasbeeh-count{
@@ -138,7 +133,6 @@ padding:6px 18px;
 border-radius:20px;
 margin-bottom:12px;
 font-weight:800;
-box-shadow:0 5px 15px rgba(0,0,0,.4);
 }
 
 .tasbeeh-btn{
@@ -146,15 +140,13 @@ width:110px;
 height:110px;
 border-radius:50%;
 background:radial-gradient(circle at center,#f4d03f 30%,#c9a227 70%);
-position:relative;
 display:flex;
 align-items:center;
 justify-content:center;
 font-size:58px;
-line-height:1;
 cursor:pointer;
 box-shadow:0 15px 30px rgba(0,0,0,.6);
-transition:.2s;
+position:relative;
 }
 
 .tasbeeh-btn::before{
@@ -179,8 +171,6 @@ transform:scale(.92);
 </head>
 
 <body>
-
-<div class="brand-bg">رحماني</div>
 
 <div class="card">
 <h2>🕌 مواقيت الصلاة</h2>
@@ -221,6 +211,8 @@ transform:scale(.92);
 <div class="tasbeeh-btn" onclick="tasbeehClick()">📿</div>
 </div>
 
+<div class="brand-footer">Rhmany</div>
+
 <script>
 
 /* GPS */
@@ -246,7 +238,7 @@ document.getElementById("locationText").innerText=`موقعك: ${city}`;
 });
 }
 
-/* Prayer */
+/* مواقيت */
 let countdownInterval;
 
 function getPrayerTimes(lat,lon){
@@ -301,37 +293,53 @@ document.getElementById("countdownBar").innerText=`متبقي ${h}س ${m}د ${s}
 },1000);
 }
 
-/* Quran */
+/* قرآن */
 let currentSurah=1;
 let audio=document.getElementById("audioPlayer");
 let playBtn=document.getElementById("playBtn");
+let surahSelect=document.getElementById("surahSelect");
+let reciterSelect=document.getElementById("reciterSelect");
 
 fetch("https://api.alquran.cloud/v1/surah")
 .then(r=>r.json())
 .then(d=>{
-let s=document.getElementById("surahSelect");
 d.data.forEach(x=>{
 let o=document.createElement("option");
 o.value=x.number;
 o.textContent=x.name;
-s.appendChild(o);
+surahSelect.appendChild(o);
 });
 });
 
-function loadSurah(surah){
-let reciter=document.getElementById("reciterSelect").value;
+function loadSurah(){
+let surah=surahSelect.value;
+let reciter=reciterSelect.value;
 audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${reciter}/${surah}.mp3`;
+audio.load();
 currentSurah=parseInt(surah);
 }
 
 function togglePlay(){
-let selected=document.getElementById("surahSelect").value;
-if(audio.src===""){loadSurah(selected);audio.play();playBtn.innerText="⏸ إيقاف";return;}
-if(audio.paused){audio.play();playBtn.innerText="⏸ إيقاف";}
-else{audio.pause();playBtn.innerText="▶ تشغيل";}
+if(audio.src===""){
+loadSurah();
+audio.play();
+playBtn.innerText="⏸ إيقاف";
+return;
+}
+if(audio.paused){
+audio.play();
+playBtn.innerText="⏸ إيقاف";
+}else{
+audio.pause();
+playBtn.innerText="▶ تشغيل";
+}
 }
 
+surahSelect.addEventListener("change",()=>{loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";});
+reciterSelect.addEventListener("change",()=>{loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";});
+
 audio.addEventListener("timeupdate",()=>{
+if(!audio.duration) return;
 let percent=(audio.currentTime/audio.duration)*100;
 document.getElementById("progressBar").style.width=percent+"%";
 document.getElementById("currentTime").innerText=formatTime(audio.currentTime);
@@ -341,8 +349,8 @@ document.getElementById("duration").innerText=formatTime(audio.duration);
 audio.addEventListener("ended",()=>{
 if(currentSurah<114){
 currentSurah++;
-document.getElementById("surahSelect").value=currentSurah;
-loadSurah(currentSurah);
+surahSelect.value=currentSurah;
+loadSurah();
 audio.play();
 }
 });
@@ -361,7 +369,7 @@ if(s<10) s="0"+s;
 return m+":"+s;
 }
 
-/* Tasbeeh */
+/* سبحة */
 let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
 
