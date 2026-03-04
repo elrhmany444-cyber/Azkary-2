@@ -365,7 +365,45 @@ localStorage.setItem("tasbeeh",tasbeehCounter);
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
 if(navigator.vibrate)navigator.vibrate(40);
 }
+/* ===== حفظ آخر تشغيل ===== */
 
+document.addEventListener("DOMContentLoaded", function () {
+
+const audio = document.getElementById("audioPlayer");
+const surahSelect = document.getElementById("surahSelect");
+const reciterSelect = document.getElementById("reciterSelect");
+
+/* تحميل آخر اختيار */
+if (localStorage.getItem("lastSurah")) {
+surahSelect.value = localStorage.getItem("lastSurah");
+}
+
+if (localStorage.getItem("lastReciter")) {
+reciterSelect.value = localStorage.getItem("lastReciter");
+}
+
+/* حفظ عند التغيير */
+surahSelect.addEventListener("change", () => {
+localStorage.setItem("lastSurah", surahSelect.value);
+});
+
+reciterSelect.addEventListener("change", () => {
+localStorage.setItem("lastReciter", reciterSelect.value);
+});
+
+/* حفظ وقت التشغيل */
+audio.addEventListener("timeupdate", () => {
+localStorage.setItem("lastTime", audio.currentTime);
+});
+
+/* يرجع لنفس الدقيقة */
+audio.addEventListener("loadedmetadata", () => {
+if (localStorage.getItem("lastTime")) {
+audio.currentTime = localStorage.getItem("lastTime");
+}
+});
+
+});
 </script>
 
 </body>
