@@ -173,7 +173,6 @@ transform:scale(.92);
 <option value="ar.alafasy">مشاري العفاسي</option>
 <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد</option>
 <option value="ar.faresabbad">فارس عباد</option>
-<option value="ar.mahermuaiqly">ماهر المعيقلي</option>
 </select>
 
 <select id="surahSelect"></select>
@@ -325,14 +324,14 @@ playBtn.innerText="▶ تشغيل";
 surahSelect.onchange=()=>{loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";}
 reciterSelect.onchange=()=>{loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";}
 
-audio.onended=function(){
-if(currentSurah<114){
+audio.addEventListener("ended", function () {
+if (currentSurah < 114) {
 currentSurah++;
-surahSelect.value=currentSurah;
+surahSelect.value = currentSurah;
 loadSurah();
 audio.play();
 }
-}
+});
 
 audio.ontimeupdate=function(){
 if(!audio.duration)return;
