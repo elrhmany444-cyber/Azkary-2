@@ -404,6 +404,18 @@ audio.currentTime = localStorage.getItem("lastTime");
 });
 
 });
+  /* ===== Dark Mode Toggle ===== */
+const darkBtn = document.createElement("button");
+darkBtn.innerText = "🌙 تبديل الوضع";
+document.body.insertBefore(darkBtn, document.body.firstChild);
+
+darkBtn.onclick = ()=>{
+document.body.style.background =
+document.body.style.background.includes("0a1f44")
+? "linear-gradient(135deg,#111,#222)"
+: "linear-gradient(135deg,#0a1f44,#c9a227)";
+};
+  
 </script>
 
 </body>
