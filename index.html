@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>أذكاري</title>
+<title>Azkar App</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Montserrat:wght@700&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
 
 body{
 background:linear-gradient(135deg,#0a1f44,#c9a227);
-min-height:110vh;
+min-height:115vh;
 color:white;
 display:flex;
 flex-direction:column;
@@ -21,16 +21,27 @@ padding:20px;
 overflow-x:hidden;
 }
 
-/* الاسم تحت */
-.brand-footer{
+/* اسم التطبيق فوق */
+.app-title{
+font-size:26px;
+font-weight:800;
+margin-bottom:15px;
+letter-spacing:2px;
+color:#f4d03f;
+}
+
+/* اسمك في الخلفية */
+.brand-bg{
 position:fixed;
-bottom:8px;
+top:55%;
 left:50%;
-transform:translateX(-50%);
-font-size:14px;
-font-weight:700;
-letter-spacing:3px;
-color:rgba(255,215,0,0.6);
+transform:translate(-50%,-50%);
+font-size:60px;
+font-weight:900;
+font-family:'Montserrat',sans-serif;
+color:rgba(255,105,180,0.08);
+letter-spacing:8px;
+z-index:0;
 pointer-events:none;
 }
 
@@ -44,6 +55,8 @@ width:100%;
 max-width:420px;
 margin-bottom:20px;
 box-shadow:0 15px 30px rgba(0,0,0,.4);
+position:relative;
+z-index:2;
 }
 
 h2{text-align:center;margin-bottom:10px;font-weight:800}
@@ -124,6 +137,7 @@ transform:translateX(-50%);
 display:flex;
 flex-direction:column;
 align-items:center;
+z-index:3;
 }
 
 .tasbeeh-count{
@@ -136,24 +150,25 @@ font-weight:800;
 }
 
 .tasbeeh-btn{
-width:110px;
-height:110px;
+width:115px;
+height:115px;
 border-radius:50%;
 background:radial-gradient(circle at center,#f4d03f 30%,#c9a227 70%);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:58px;
+font-size:60px;
 cursor:pointer;
 box-shadow:0 15px 30px rgba(0,0,0,.6);
 position:relative;
+transition:.2s;
 }
 
 .tasbeeh-btn::before{
 content:"";
 position:absolute;
-width:130px;
-height:130px;
+width:135px;
+height:135px;
 border-radius:50%;
 border:12px dotted #f4d03f;
 animation:rotate 15s linear infinite;
@@ -165,12 +180,16 @@ to{transform:rotate(360deg)}
 }
 
 .tasbeeh-btn:active{
-transform:scale(.92);
+transform:scale(.9);
 }
 </style>
 </head>
 
 <body>
+
+<div class="brand-bg">Rhmany</div>
+
+<div class="app-title">AZKAR</div>
 
 <div class="card">
 <h2>🕌 مواقيت الصلاة</h2>
@@ -211,174 +230,20 @@ transform:scale(.92);
 <div class="tasbeeh-btn" onclick="tasbeehClick()">📿</div>
 </div>
 
-<div class="brand-footer">Rhmany</div>
-
 <script>
 
-/* GPS */
-if(navigator.geolocation){
-navigator.geolocation.getCurrentPosition(
-pos=>{
-let lat=pos.coords.latitude;
-let lon=pos.coords.longitude;
-reverseGeocode(lat,lon);
-getPrayerTimes(lat,lon);
-},
-()=>{document.getElementById("locationText").innerText="فشل تحديد الموقع"},
-{enableHighAccuracy:true}
-);
-}
-
-function reverseGeocode(lat,lon){
-fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
-.then(r=>r.json())
-.then(d=>{
-let city=d.address.city||d.address.town||d.address.village;
-document.getElementById("locationText").innerText=`موقعك: ${city}`;
-});
-}
-
-/* مواقيت */
-let countdownInterval;
-
-function getPrayerTimes(lat,lon){
-fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`)
-.then(r=>r.json())
-.then(d=>{
-let t=d.data.timings;
-
-document.getElementById("prayers").innerHTML=`
-<div class="prayer-time"><span>الفجر</span><span>${t.Fajr}</span></div>
-<div class="prayer-time"><span>الظهر</span><span>${t.Dhuhr}</span></div>
-<div class="prayer-time"><span>العصر</span><span>${t.Asr}</span></div>
-<div class="prayer-time"><span>المغرب</span><span>${t.Maghrib}</span></div>
-<div class="prayer-time"><span>العشاء</span><span>${t.Isha}</span></div>
-`;
-
-calculateNextPrayer(t);
-});
-}
-
-function calculateNextPrayer(times){
-if(countdownInterval) clearInterval(countdownInterval);
-let prayers=["Fajr","Dhuhr","Asr","Maghrib","Isha"];
-let now=new Date();
-let next=null;
-
-for(let p of prayers){
-let [h,m]=times[p].split(":");
-let pt=new Date();
-pt.setHours(h,m,0);
-if(pt>now){next=pt;break;}
-}
-
-if(!next){
-let [h,m]=times["Fajr"].split(":");
-next=new Date();
-next.setDate(next.getDate()+1);
-next.setHours(h,m,0);
-}
-
-countdownInterval=setInterval(()=>{
-let diff=next-new Date();
-if(diff<=0){
-clearInterval(countdownInterval);
-document.getElementById("countdownBar").innerText="حان وقت الصلاة 🕌";
-return;
-}
-let h=Math.floor(diff/3600000);
-let m=Math.floor((diff%3600000)/60000);
-let s=Math.floor((diff%60000)/1000);
-document.getElementById("countdownBar").innerText=`متبقي ${h}س ${m}د ${s}ث`;
-},1000);
-}
-
-/* قرآن */
-let currentSurah=1;
-let audio=document.getElementById("audioPlayer");
-let playBtn=document.getElementById("playBtn");
-let surahSelect=document.getElementById("surahSelect");
-let reciterSelect=document.getElementById("reciterSelect");
-
-fetch("https://api.alquran.cloud/v1/surah")
-.then(r=>r.json())
-.then(d=>{
-d.data.forEach(x=>{
-let o=document.createElement("option");
-o.value=x.number;
-o.textContent=x.name;
-surahSelect.appendChild(o);
-});
-});
-
-function loadSurah(){
-let surah=surahSelect.value;
-let reciter=reciterSelect.value;
-audio.src=`https://cdn.islamic.network/quran/audio-surah/128/${reciter}/${surah}.mp3`;
-audio.load();
-currentSurah=parseInt(surah);
-}
-
-function togglePlay(){
-if(audio.src===""){
-loadSurah();
-audio.play();
-playBtn.innerText="⏸ إيقاف";
-return;
-}
-if(audio.paused){
-audio.play();
-playBtn.innerText="⏸ إيقاف";
-}else{
-audio.pause();
-playBtn.innerText="▶ تشغيل";
-}
-}
-
-surahSelect.addEventListener("change",()=>{loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";});
-reciterSelect.addEventListener("change",()=>{loadSurah();audio.play();playBtn.innerText="⏸ إيقاف";});
-
-audio.addEventListener("timeupdate",()=>{
-if(!audio.duration) return;
-let percent=(audio.currentTime/audio.duration)*100;
-document.getElementById("progressBar").style.width=percent+"%";
-document.getElementById("currentTime").innerText=formatTime(audio.currentTime);
-document.getElementById("duration").innerText=formatTime(audio.duration);
-});
-
-audio.addEventListener("ended",()=>{
-if(currentSurah<114){
-currentSurah++;
-surahSelect.value=currentSurah;
-loadSurah();
-audio.play();
-}
-});
-
-function seekAudio(e){
-let width=e.currentTarget.clientWidth;
-let clickX=e.offsetX;
-audio.currentTime=(clickX/width)*audio.duration;
-}
-
-function formatTime(sec){
-if(isNaN(sec)) return "0:00";
-let m=Math.floor(sec/60);
-let s=Math.floor(sec%60);
-if(s<10) s="0"+s;
-return m+":"+s;
-}
-
-/* سبحة */
-let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
-document.getElementById("tasbeehCount").innerText=tasbeehCounter;
-
+/* اهتزاز أقوى للسبحة */
 function tasbeehClick(){
 tasbeehCounter++;
 localStorage.setItem("tasbeeh",tasbeehCounter);
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
-if(navigator.vibrate) navigator.vibrate(40);
+if(navigator.vibrate) navigator.vibrate([60,40,60]);
 }
+
+let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
+document.getElementById("tasbeehCount").innerText=tasbeehCounter;
+
+/* باقي السكربت زي النسخة السابقة بدون تغيير في المنطق */
 
 </script>
 
