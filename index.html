@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Azkar App</title>
+<title>AZKAR</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Montserrat:wght@700&family=Amiri&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
@@ -22,7 +22,7 @@ overflow-x:hidden;
 }
 
 .app-title{
-font-size:26px;
+font-size:28px;
 font-weight:800;
 margin-bottom:15px;
 letter-spacing:2px;
@@ -31,13 +31,13 @@ color:#f4d03f;
 
 .brand-bg{
 position:fixed;
-top:55%;
+top:60%;
 left:50%;
 transform:translate(-50%,-50%);
-font-size:60px;
+font-size:55px;
 font-weight:900;
 font-family:'Montserrat',sans-serif;
-color:rgba(255,105,180,0.08);
+color:rgba(255,105,180,0.07);
 letter-spacing:8px;
 z-index:0;
 pointer-events:none;
@@ -58,12 +58,7 @@ z-index:2;
 
 h2{text-align:center;margin-bottom:10px;font-weight:800}
 
-.location{
-text-align:center;
-font-size:14px;
-margin-bottom:10px;
-color:#f4d03f;
-}
+.location{text-align:center;font-size:14px;margin-bottom:10px;color:#f4d03f}
 
 .countdown-bar{
 background:linear-gradient(45deg,#c9a227,#f4d03f);
@@ -80,6 +75,10 @@ display:flex;
 justify-content:space-between;
 margin:8px 0;
 font-weight:600;
+}
+
+select{
+font-family:'Amiri',serif;
 }
 
 select,button{
@@ -113,7 +112,6 @@ overflow:hidden;
 height:100%;
 width:0%;
 background:linear-gradient(90deg,#f4d03f,#c9a227);
-transition:.2s;
 }
 
 .time{
@@ -174,9 +172,7 @@ from{transform:rotate(0)}
 to{transform:rotate(360deg)}
 }
 
-.tasbeeh-btn:active{
-transform:scale(.9);
-}
+.tasbeeh-btn:active{transform:scale(.9)}
 </style>
 </head>
 
@@ -226,28 +222,18 @@ transform:scale(.9);
 
 <script>
 
-/* ===== السور ثابتة ===== */
-const surahs=[
-"الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس",
-"هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه",
-"الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم",
-"لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر",
-"فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق",
-"الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة",
-"الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج",
-"نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس",
-"التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد",
-"الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات",
-"القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر",
-"المسد","الإخلاص","الفلق","الناس"
-];
-
+/* ===== تحميل أسماء السور زي الأول ===== */
 let surahSelect=document.getElementById("surahSelect");
-surahs.forEach((name,i)=>{
-let o=document.createElement("option");
-o.value=(i+1).toString().padStart(3,'0');
-o.textContent=`${i+1} - ${name}`;
-surahSelect.appendChild(o);
+
+fetch("https://api.alquran.cloud/v1/surah")
+.then(res=>res.json())
+.then(data=>{
+data.data.forEach(surah=>{
+let option=document.createElement("option");
+option.value=surah.number.toString().padStart(3,'0');
+option.textContent=surah.name;
+surahSelect.appendChild(option);
+});
 });
 
 /* ===== مشغل ===== */
@@ -303,7 +289,7 @@ if(s<10)s="0"+s;
 return m+":"+s;
 }
 
-/* سبحة */
+/* ===== سبحة ===== */
 let tasbeehCounter=localStorage.getItem("tasbeeh")||0;
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
 
@@ -311,7 +297,7 @@ function tasbeehClick(){
 tasbeehCounter++;
 localStorage.setItem("tasbeeh",tasbeehCounter);
 document.getElementById("tasbeehCount").innerText=tasbeehCounter;
-if(navigator.vibrate)navigator.vibrate([60,40,60]);
+if(navigator.vibrate)navigator.vibrate([70,40,70]);
 }
 
 </script>
